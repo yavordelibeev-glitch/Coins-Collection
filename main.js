@@ -6,12 +6,16 @@ const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
   update,
 });
 
-let dude, bg, backgroundMusic, score = 0, text, gameOverText, restartButton;
-let plat; 
-let coins;
+let dude, bg, backgroundMusic, score = 0, scoreText;
+let plat, coins;
 let w, a, d;
 let buttonStates = { left: false, right: false, jump: false };
 let isGameOver = false;
+let isStarted = false;
+let musicOn = true;
+
+// Menu Elements
+let startButton, titleText, musicToggle;
 
 let addNew = true, addNew1 = true, addNew2 = true, addNew3 = true, addNew4 = true,
   addNew6 = true, addNew7 = true, addNew8 = true, addNew9 = true,
@@ -35,10 +39,11 @@ function create() {
 
   bg = game.add.tileSprite(0, 0, 6000, 800, "bg");
 
+  // Initial setup but keep dude hidden/paused
   dude = game.add.sprite(100, 50, "dude"); 
   game.physics.arcade.enable(dude);
-  dude.body.gravity.y = 1000;
-  dude.body.collideWorldBounds = false; 
+  dude.body.gravity.y = 0; // Don't fall yet
+  dude.visible = false;
 
   dude.animations.add("left", [0, 1, 2, 3], 10, true);
   dude.animations.add("right", [5, 6, 7, 8], 10, true);
@@ -48,26 +53,61 @@ function create() {
 
   platforma(); 
   moneta();
-  setupMobileButtons();
-
-  game.camera.follow(dude);
-
+  
   backgroundMusic = game.add.audio("backgroundSound");
   backgroundMusic.loop = true;
-  backgroundMusic.play();
+
+  // --- START MENU UI ---
+  titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "100px Arial", fill: "#ffffff" });
+  titleText.anchor.setTo(0.5);
+  titleText.fixedToCamera = true;
+
+  startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00" });
+  startButton.anchor.setTo(0.5);
+  startButton.inputEnabled = true;
+  startButton.fixedToCamera = true;
+  startButton.events.onInputDown.add(startGame);
+
+  musicToggle = game.add.text(1700, 50, "MUSIC: ON", { font: "30px Arial", fill: "#ffffff" });
+  musicToggle.anchor.setTo(1, 0);
+  musicToggle.inputEnabled = true;
+  musicToggle.fixedToCamera = true;
+  musicToggle.events.onInputDown.add(toggleMusic);
 
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
 }
 
+function startGame() {
+  isStarted = true;
+  dude.visible = true;
+  dude.body.gravity.y = 1000;
+  titleText.visible = false;
+  startButton.visible = false;
+  
+  if (musicOn) backgroundMusic.play();
+  
+  setupMobileButtons();
+  game.camera.follow(dude);
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  musicToggle.text = musicOn ? "MUSIC: ON" : "MUSIC: OFF";
+  
+  if (isStarted) {
+    if (musicOn) backgroundMusic.play();
+    else backgroundMusic.stop();
+  }
+}
+
 function update() {
-  if (isGameOver) return;
+  if (!isStarted || isGameOver) return;
 
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
 
-  // CHECK FOR DEATH (Touching the bottom)
   if (dude.y > 800) {
     showGameOver();
   }
@@ -81,29 +121,17 @@ function showGameOver() {
   dude.kill();
   backgroundMusic.stop();
 
-  // Create "GAME OVER" Text
-  gameOverText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { 
-    font: "80px Arial", 
-    fill: "#ff0000", 
-    align: "center" 
-  });
-  gameOverText.anchor.setTo(0.5);
+  let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
+  goText.anchor.setTo(0.5);
 
-  // Create "RESTART" Button
-  restartButton = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { 
-    font: "50px Arial", 
-    fill: "#ffffff", 
-    backgroundColor: "#333333" 
-  });
-  restartButton.anchor.setTo(0.5);
-  restartButton.padding.set(20, 20);
-  restartButton.inputEnabled = true;
-  restartButton.events.onInputDown.add(() => { location.reload(); });
+  // RESTART TEXT (No background)
+  let restText = game.add.text(game.camera.x + 900, 450, "TRY AGAIN?", { font: "50px Arial", fill: "#ffffff" });
+  restText.anchor.setTo(0.5);
+  restText.inputEnabled = true;
+  restText.events.onInputDown.add(() => { location.reload(); });
 }
 
 function handleMovement() {
-  if (!dude.alive) return;
-  
   let isLeft = a.isDown || buttonStates.left;
   let isRight = d.isDown || buttonStates.right;
   let isJump = w.isDown || buttonStates.jump;
@@ -145,13 +173,7 @@ function handleMovement() {
 function platforma() {
   plat = game.add.group();
   plat.enableBody = true;
-  
-  const points = [
-    [100, 250], [500, 470], [1000, 350], [1600, 480], 
-    [1600, 200], [2000, 350], [2600, 150], [3200, 300], 
-    [2900, 480], [3900, 300], [4500, 100], [4700, 400], [5400, 400]
-  ];
-
+  const points = [[100, 250], [500, 470], [1000, 350], [1600, 480], [1600, 200], [2000, 350], [2600, 150], [3200, 300], [2900, 480], [3900, 300], [4500, 100], [4700, 400], [5400, 400]];
   points.forEach((p) => {
     let obj = plat.create(p[0], p[1], "plat");
     obj.scale.setTo(0.5);
@@ -188,8 +210,8 @@ function handleLevels() {
   
   if (score == 25 && addNew13) {
     backgroundMusic.stop();
-    text = game.add.text(game.camera.x + 900, 400, "YOU WIN!", { font: "64px Arial", fill: "#ffffff" });
-    text.anchor.setTo(0.5); 
+    let win = game.add.text(game.camera.x + 900, 400, "YOU WIN!", { font: "64px Arial", fill: "#ffffff" });
+    win.anchor.setTo(0.5); 
     dude.kill(); 
     addNew13 = false;
   }
