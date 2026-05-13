@@ -6,15 +6,15 @@ const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
   update,
 });
 
-let dude, bg, backgroundMusic, score = 0, scoreText;
+let dude, bg, backgroundMusic, score = 0;
 let plat, coins;
 let w, a, d;
 let buttonStates = { left: false, right: false, jump: false };
 let isGameOver = false;
-let isStarted = false;
+let isStarted = false; // Tracks if we are in the menu or the game
 let musicOn = true;
 
-// Menu Elements
+// UI Elements
 let startButton, titleText, musicToggle;
 
 let addNew = true, addNew1 = true, addNew2 = true, addNew3 = true, addNew4 = true,
@@ -39,10 +39,10 @@ function create() {
 
   bg = game.add.tileSprite(0, 0, 6000, 800, "bg");
 
-  // Initial setup but keep dude hidden/paused
+  // Create dude but keep him hidden and gravity-free for now
   dude = game.add.sprite(100, 50, "dude"); 
   game.physics.arcade.enable(dude);
-  dude.body.gravity.y = 0; // Don't fall yet
+  dude.body.gravity.y = 0; 
   dude.visible = false;
 
   dude.animations.add("left", [0, 1, 2, 3], 10, true);
@@ -58,17 +58,21 @@ function create() {
   backgroundMusic.loop = true;
 
   // --- START MENU UI ---
-  titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "100px Arial", fill: "#ffffff" });
+  // Large Title
+  titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
   titleText.anchor.setTo(0.5);
   titleText.fixedToCamera = true;
 
-  startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00" });
+  // Start Button
+  startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
   startButton.anchor.setTo(0.5);
+  startButton.padding.set(20, 10);
   startButton.inputEnabled = true;
   startButton.fixedToCamera = true;
   startButton.events.onInputDown.add(startGame);
 
-  musicToggle = game.add.text(1700, 50, "MUSIC: ON", { font: "30px Arial", fill: "#ffffff" });
+  // Music Toggle Button
+  musicToggle = game.add.text(1750, 50, "MUSIC: ON", { font: "30px Arial", fill: "#ffffff" });
   musicToggle.anchor.setTo(1, 0);
   musicToggle.inputEnabled = true;
   musicToggle.fixedToCamera = true;
@@ -82,13 +86,17 @@ function create() {
 function startGame() {
   isStarted = true;
   dude.visible = true;
-  dude.body.gravity.y = 1000;
+  dude.body.gravity.y = 1000; // Turn gravity on
+  
+  // Hide menu elements
   titleText.visible = false;
   startButton.visible = false;
   
-  if (musicOn) backgroundMusic.play();
+  if (musicOn) {
+    backgroundMusic.play();
+  }
   
-  setupMobileButtons();
+  setupMobileButtons(); // Show movement buttons only after start
   game.camera.follow(dude);
 }
 
@@ -96,6 +104,7 @@ function toggleMusic() {
   musicOn = !musicOn;
   musicToggle.text = musicOn ? "MUSIC: ON" : "MUSIC: OFF";
   
+  // If game already started, stop or play immediately
   if (isStarted) {
     if (musicOn) backgroundMusic.play();
     else backgroundMusic.stop();
@@ -103,6 +112,7 @@ function toggleMusic() {
 }
 
 function update() {
+  // If we haven't pressed start, or we died, stop the logic
   if (!isStarted || isGameOver) return;
 
   game.physics.arcade.collide(dude, plat);
@@ -124,8 +134,8 @@ function showGameOver() {
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
 
-  // RESTART TEXT (No background)
-  let restText = game.add.text(game.camera.x + 900, 450, "TRY AGAIN?", { font: "50px Arial", fill: "#ffffff" });
+  // Restart Text (Clean, no background)
+  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO TRY AGAIN", { font: "50px Arial", fill: "#ffffff" });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
   restText.events.onInputDown.add(() => { location.reload(); });
@@ -136,6 +146,7 @@ function handleMovement() {
   let isRight = d.isDown || buttonStates.right;
   let isJump = w.isDown || buttonStates.jump;
 
+  // Power-up logic remains the same
   if (score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
