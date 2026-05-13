@@ -6,11 +6,12 @@ const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
   update,
 });
 
-let dude, bg, backgroundMusic, score = 0, text;
-let plat; // Only floating platforms now
+let dude, bg, backgroundMusic, score = 0, text, gameOverText, restartButton;
+let plat; 
 let coins;
 let w, a, d;
 let buttonStates = { left: false, right: false, jump: false };
+let isGameOver = false;
 
 let addNew = true, addNew1 = true, addNew2 = true, addNew3 = true, addNew4 = true,
   addNew6 = true, addNew7 = true, addNew8 = true, addNew9 = true,
@@ -29,16 +30,15 @@ function create() {
   game.scale.pageAlignHorizontally = true;
   game.scale.pageAlignVertically = true;
 
-  game.world.setBounds(0, 0, 6000, 1200); // Made the world taller for falling
+  game.world.setBounds(0, 0, 6000, 800); 
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
-  bg = game.add.tileSprite(0, 0, 6000, 1200, "bg");
+  bg = game.add.tileSprite(0, 0, 6000, 800, "bg");
 
-  // SPAWN ABOVE FIRST PLATFORM
   dude = game.add.sprite(100, 50, "dude"); 
   game.physics.arcade.enable(dude);
   dude.body.gravity.y = 1000;
-  dude.body.collideWorldBounds = false; // Allow falling off the bottom
+  dude.body.collideWorldBounds = false; 
 
   dude.animations.add("left", [0, 1, 2, 3], 10, true);
   dude.animations.add("right", [5, 6, 7, 8], 10, true);
@@ -62,16 +62,43 @@ function create() {
 }
 
 function update() {
+  if (isGameOver) return;
+
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
 
-  // RESTART IF FALLEN
-  if (dude.y > 1000) {
-    location.reload();
+  // CHECK FOR DEATH (Touching the bottom)
+  if (dude.y > 800) {
+    showGameOver();
   }
 
   handleLevels();
   handleMovement();
+}
+
+function showGameOver() {
+  isGameOver = true;
+  dude.kill();
+  backgroundMusic.stop();
+
+  // Create "GAME OVER" Text
+  gameOverText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { 
+    font: "80px Arial", 
+    fill: "#ff0000", 
+    align: "center" 
+  });
+  gameOverText.anchor.setTo(0.5);
+
+  // Create "RESTART" Button
+  restartButton = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { 
+    font: "50px Arial", 
+    fill: "#ffffff", 
+    backgroundColor: "#333333" 
+  });
+  restartButton.anchor.setTo(0.5);
+  restartButton.padding.set(20, 20);
+  restartButton.inputEnabled = true;
+  restartButton.events.onInputDown.add(() => { location.reload(); });
 }
 
 function handleMovement() {
@@ -119,7 +146,6 @@ function platforma() {
   plat = game.add.group();
   plat.enableBody = true;
   
-  // The first platform is at x:100, y:250 - dude spawns at y:50 to land on it
   const points = [
     [100, 250], [500, 470], [1000, 350], [1600, 480], 
     [1600, 200], [2000, 350], [2600, 150], [3200, 300], 
