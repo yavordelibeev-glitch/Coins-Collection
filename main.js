@@ -26,7 +26,12 @@ function preload() {
 }
 
 function create() {
-game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+  // --- MOBILE STRETCH FIX ---
+  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+  game.scale.pageAlignHorizontally = true;
+  game.scale.pageAlignVertically = true;
+  game.scale.refresh();
+
   game.world.setBounds(0, 0, 6000, 800);
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -85,20 +90,15 @@ function handleMovement() {
   let isRight = d.isDown || buttonStates.right;
   let isJump = w.isDown || buttonStates.jump;
 
-  // --- POWER UP: INVERTED CONTROLS (Score 23-24) ---
   if (score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
     isRight = temp;
   }
 
-  // --- POWER UP: SPEED CHANGE (Score 4+) ---
   let speed = (score < 4) ? 500 : 250;
-
-  // --- POWER UP: LOW GRAVITY (Score 10-13) ---
   dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
 
-  // --- POWER UP: SIZE CHANGE (Score 16-19) ---
   if (score >= 16 && score < 20) {
     dude.scale.setTo(0.5, 0.5);
   } else {
@@ -200,6 +200,8 @@ function collectCoin(player, coin) { coin.kill(); score++; }
 function hitEnemy() { location.reload(); }
 
 function setupMobileButtons() {
+  // We move the buttons up slightly to y=520 and y=480 
+  // to make sure they are well within the visible frame
   const createBtn = (x, y, w, h, type) => {
     let g = game.add.graphics(0, 0);
     g.beginFill(0xffffff, 0.3);
@@ -211,7 +213,7 @@ function setupMobileButtons() {
     btn.events.onInputUp.add(() => { buttonStates[type] = false; });
     g.destroy();
   };
-  createBtn(50, 580, 200, 200, 'left');
-  createBtn(280, 580, 200, 200, 'right');
-  createBtn(1520, 550, 240, 240, 'jump');
+  createBtn(50, 520, 200, 200, 'left');
+  createBtn(280, 520, 200, 200, 'right');
+  createBtn(1520, 480, 240, 240, 'jump');
 }
