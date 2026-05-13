@@ -26,7 +26,7 @@ function preload() {
 }
 
 function create() {
-  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
   game.world.setBounds(0, 0, 6000, 800);
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
