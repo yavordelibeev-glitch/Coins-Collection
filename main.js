@@ -8,14 +8,12 @@ const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
 
 let dude, bg, backgroundMusic, score = 0;
 let plat, coins;
-let w, a, d;
+let w, a, d, cursors, fKey, mKey;
 let buttonStates = { left: false, right: false, jump: false };
-let isGameOver = false;
-let isStarted = false;
-let musicOn = true;
+let isGameOver = false, isStarted = false, musicOn = true;
 
 // UI Elements
-let startButton, titleText, musicToggle, fullScreenButton;
+let startButton, titleText, musicToggle, fullScreenButton, alertText;
 
 let addNew = true, addNew1 = true, addNew2 = true, addNew3 = true, addNew4 = true,
   addNew6 = true, addNew7 = true, addNew8 = true, addNew9 = true,
@@ -30,12 +28,9 @@ function preload() {
 }
 
 function create() {
-  // --- SCALE SETUP ---
   game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
   game.scale.pageAlignHorizontally = true;
   game.scale.pageAlignVertically = true;
-  
-  // This allows the game to actually go fullscreen
   game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
 
   game.world.setBounds(0, 0, 6000, 800); 
@@ -60,65 +55,66 @@ function create() {
   backgroundMusic = game.add.audio("backgroundSound");
   backgroundMusic.loop = true;
 
-  // --- START MENU UI ---
+  // Notification Text (Power Ups)
+  alertText = game.add.text(900, 400, "", { font: "bold 80px Arial", fill: "#f39c12" });
+  alertText.anchor.setTo(0.5);
+  alertText.fixedToCamera = true;
+  alertText.visible = false;
+
+  // --- MENU ---
   titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
-  titleText.anchor.setTo(0.5);
-  titleText.fixedToCamera = true;
+  titleText.anchor.setTo(0.5); titleText.fixedToCamera = true;
 
   startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
-  startButton.anchor.setTo(0.5);
-  startButton.padding.set(20, 10);
-  startButton.inputEnabled = true;
-  startButton.fixedToCamera = true;
+  startButton.anchor.setTo(0.5); startButton.inputEnabled = true; startButton.fixedToCamera = true;
   startButton.events.onInputDown.add(startGame);
 
-  // FULLSCREEN BUTTON
-  fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN", { font: "40px Arial", fill: "#ffff00", backgroundColor: "rgba(0,0,0,0.5)" });
-  fullScreenButton.anchor.setTo(0.5);
-  fullScreenButton.padding.set(15, 5);
-  fullScreenButton.inputEnabled = true;
-  fullScreenButton.fixedToCamera = true;
+  fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN (F)", { font: "40px Arial", fill: "#ffff00", backgroundColor: "rgba(0,0,0,0.5)" });
+  fullScreenButton.anchor.setTo(0.5); fullScreenButton.inputEnabled = true; fullScreenButton.fixedToCamera = true;
   fullScreenButton.events.onInputDown.add(goFull);
 
-  musicToggle = game.add.text(1750, 50, "MUSIC: ON", { font: "30px Arial", fill: "#ffffff" });
-  musicToggle.anchor.setTo(1, 0);
-  musicToggle.inputEnabled = true;
-  musicToggle.fixedToCamera = true;
+  musicToggle = game.add.text(1750, 50, "MUSIC: ON (M)", { font: "30px Arial", fill: "#ffffff" });
+  musicToggle.anchor.setTo(1, 0); musicToggle.inputEnabled = true; musicToggle.fixedToCamera = true;
   musicToggle.events.onInputDown.add(toggleMusic);
 
+  // --- CONTROLS ---
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
+  cursors = game.input.keyboard.createCursorKeys();
+  fKey = game.input.keyboard.addKey(Phaser.Keyboard.F);
+  mKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
+
+  fKey.onDown.add(goFull);
+  mKey.onDown.add(toggleMusic);
+}
+
+function showAlert(message) {
+    alertText.text = message;
+    alertText.visible = true;
+    game.time.events.add(Phaser.Timer.SECOND * 1.5, () => { alertText.visible = false; });
 }
 
 function goFull() {
-    if (game.scale.isFullScreen) {
-        game.scale.stopFullScreen();
-        fullScreenButton.text = "GO FULLSCREEN";
-    } else {
-        game.scale.startFullScreen(false);
-        fullScreenButton.text = "EXIT FULLSCREEN";
-    }
+    if (game.scale.isFullScreen) game.scale.stopFullScreen();
+    else game.scale.startFullScreen(false);
 }
 
 function startGame() {
   isStarted = true;
   dude.visible = true;
   dude.body.gravity.y = 1000; 
-  
   titleText.visible = false;
   startButton.visible = false;
-  fullScreenButton.visible = false; // Hide it once game starts to clear the UI
-  
+  fullScreenButton.visible = false;
   if (musicOn) backgroundMusic.play();
-  
   setupMobileButtons();
   game.camera.follow(dude);
 }
 
 function toggleMusic() {
   musicOn = !musicOn;
-  musicToggle.text = musicOn ? "MUSIC: ON" : "MUSIC: OFF";
+  musicToggle.text = musicOn ? "MUSIC: ON (M)" : "MUSIC: OFF (M)";
   if (isStarted) {
     if (musicOn) backgroundMusic.play();
     else backgroundMusic.stop();
@@ -127,12 +123,9 @@ function toggleMusic() {
 
 function update() {
   if (!isStarted || isGameOver) return;
-
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
-
   if (dude.y > 800) showGameOver();
-
   handleLevels();
   handleMovement();
 }
@@ -141,35 +134,33 @@ function showGameOver() {
   isGameOver = true;
   dude.kill();
   backgroundMusic.stop();
-
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
-
-  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO TRY AGAIN", { font: "50px Arial", fill: "#ffffff" });
-  restText.anchor.setTo(0.5);
-  restText.inputEnabled = true;
+  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { font: "50px Arial", fill: "#ffffff" });
+  restText.anchor.setTo(0.5); restText.inputEnabled = true;
   restText.events.onInputDown.add(() => { location.reload(); });
 }
 
 function handleMovement() {
-  let isLeft = a.isDown || buttonStates.left;
-  let isRight = d.isDown || buttonStates.right;
-  let isJump = w.isDown || buttonStates.jump;
+  let isLeft = a.isDown || cursors.left.isDown || buttonStates.left;
+  let isRight = d.isDown || cursors.right.isDown || buttonStates.right;
+  let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
+
+  // Power Up Messages Trigger
+  if (score === 4 && addNew1) { showAlert("SPEED UP!"); }
+  if (score === 10 && addNew4) { showAlert("LOW GRAVITY!"); }
+  if (score === 16 && addNew8) { showAlert("TINY MODE!"); }
+  if (score === 23 && addNew12) { showAlert("CONTROLS SWITCHED!"); }
 
   if (score >= 23 && score < 25) {
-    let temp = isLeft;
-    isLeft = isRight;
-    isRight = temp;
+    let temp = isLeft; isLeft = isRight; isRight = temp;
   }
 
   let speed = (score < 4) ? 500 : 250;
   dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
 
-  if (score >= 16 && score < 20) {
-    dude.scale.setTo(0.5, 0.5);
-  } else {
-    dude.scale.setTo(1, 1);
-  }
+  if (score >= 16 && score < 20) dude.scale.setTo(0.5, 0.5);
+  else dude.scale.setTo(1, 1);
 
   if (isLeft) {
     dude.body.velocity.x = -speed;
@@ -201,10 +192,7 @@ function platforma() {
   });
 }
 
-function moneta() {
-  createCoin(200, 180);
-  createCoin(400, 180);
-}
+function moneta() { createCoin(200, 180); createCoin(400, 180); }
 
 function createCoin(x, y) {
   let c = coins.create(x, y, "coin");
@@ -230,8 +218,14 @@ function handleLevels() {
   
   if (score >= 25 && addNew13) {
     backgroundMusic.stop();
-    let win = game.add.text(game.camera.x + 900, 400, "YOU WIN!", { font: "64px Arial", fill: "#ffffff" });
-    win.anchor.setTo(0.5); 
+    let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", { font: "80px Arial", fill: "#ffffff" });
+    win.anchor.setTo(0.5); win.fixedToCamera = true;
+    
+    let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", { font: "50px Arial", fill: "#00ff00" });
+    restText.anchor.setTo(0.5); restText.fixedToCamera = true;
+    restText.inputEnabled = true;
+    restText.events.onInputDown.add(() => { location.reload(); });
+
     dude.kill(); 
     addNew13 = false;
   }
@@ -245,8 +239,7 @@ function setupMobileButtons() {
     g.beginFill(0xffffff, 0.3);
     g.drawRect(0, 0, w, h);
     let btn = game.add.sprite(x, y, g.generateTexture());
-    btn.inputEnabled = true;
-    btn.fixedToCamera = true;
+    btn.inputEnabled = true; btn.fixedToCamera = true;
     btn.events.onInputDown.add(() => { buttonStates[type] = true; });
     btn.events.onInputUp.add(() => { buttonStates[type] = false; });
     g.destroy();
