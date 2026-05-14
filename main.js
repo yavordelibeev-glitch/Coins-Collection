@@ -11,11 +11,11 @@ let plat, coins;
 let w, a, d;
 let buttonStates = { left: false, right: false, jump: false };
 let isGameOver = false;
-let isStarted = false; // Tracks if we are in the menu or the game
+let isStarted = false;
 let musicOn = true;
 
 // UI Elements
-let startButton, titleText, musicToggle;
+let startButton, titleText, musicToggle, fullScreenButton;
 
 let addNew = true, addNew1 = true, addNew2 = true, addNew3 = true, addNew4 = true,
   addNew6 = true, addNew7 = true, addNew8 = true, addNew9 = true,
@@ -30,16 +30,19 @@ function preload() {
 }
 
 function create() {
+  // --- SCALE SETUP ---
   game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
   game.scale.pageAlignHorizontally = true;
   game.scale.pageAlignVertically = true;
+  
+  // This allows the game to actually go fullscreen
+  game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
 
   game.world.setBounds(0, 0, 6000, 800); 
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
   bg = game.add.tileSprite(0, 0, 6000, 800, "bg");
 
-  // Create dude but keep him hidden and gravity-free for now
   dude = game.add.sprite(100, 50, "dude"); 
   game.physics.arcade.enable(dude);
   dude.body.gravity.y = 0; 
@@ -58,12 +61,10 @@ function create() {
   backgroundMusic.loop = true;
 
   // --- START MENU UI ---
-  // Large Title
   titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
   titleText.anchor.setTo(0.5);
   titleText.fixedToCamera = true;
 
-  // Start Button
   startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
   startButton.anchor.setTo(0.5);
   startButton.padding.set(20, 10);
@@ -71,7 +72,14 @@ function create() {
   startButton.fixedToCamera = true;
   startButton.events.onInputDown.add(startGame);
 
-  // Music Toggle Button
+  // FULLSCREEN BUTTON
+  fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN", { font: "40px Arial", fill: "#ffff00", backgroundColor: "rgba(0,0,0,0.5)" });
+  fullScreenButton.anchor.setTo(0.5);
+  fullScreenButton.padding.set(15, 5);
+  fullScreenButton.inputEnabled = true;
+  fullScreenButton.fixedToCamera = true;
+  fullScreenButton.events.onInputDown.add(goFull);
+
   musicToggle = game.add.text(1750, 50, "MUSIC: ON", { font: "30px Arial", fill: "#ffffff" });
   musicToggle.anchor.setTo(1, 0);
   musicToggle.inputEnabled = true;
@@ -83,28 +91,34 @@ function create() {
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
 }
 
+function goFull() {
+    if (game.scale.isFullScreen) {
+        game.scale.stopFullScreen();
+        fullScreenButton.text = "GO FULLSCREEN";
+    } else {
+        game.scale.startFullScreen(false);
+        fullScreenButton.text = "EXIT FULLSCREEN";
+    }
+}
+
 function startGame() {
   isStarted = true;
   dude.visible = true;
-  dude.body.gravity.y = 1000; // Turn gravity on
+  dude.body.gravity.y = 1000; 
   
-  // Hide menu elements
   titleText.visible = false;
   startButton.visible = false;
+  fullScreenButton.visible = false; // Hide it once game starts to clear the UI
   
-  if (musicOn) {
-    backgroundMusic.play();
-  }
+  if (musicOn) backgroundMusic.play();
   
-  setupMobileButtons(); // Show movement buttons only after start
+  setupMobileButtons();
   game.camera.follow(dude);
 }
 
 function toggleMusic() {
   musicOn = !musicOn;
   musicToggle.text = musicOn ? "MUSIC: ON" : "MUSIC: OFF";
-  
-  // If game already started, stop or play immediately
   if (isStarted) {
     if (musicOn) backgroundMusic.play();
     else backgroundMusic.stop();
@@ -112,15 +126,12 @@ function toggleMusic() {
 }
 
 function update() {
-  // If we haven't pressed start, or we died, stop the logic
   if (!isStarted || isGameOver) return;
 
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
 
-  if (dude.y > 800) {
-    showGameOver();
-  }
+  if (dude.y > 800) showGameOver();
 
   handleLevels();
   handleMovement();
@@ -134,7 +145,6 @@ function showGameOver() {
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
 
-  // Restart Text (Clean, no background)
   let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO TRY AGAIN", { font: "50px Arial", fill: "#ffffff" });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
@@ -146,7 +156,6 @@ function handleMovement() {
   let isRight = d.isDown || buttonStates.right;
   let isJump = w.isDown || buttonStates.jump;
 
-  // Power-up logic remains the same
   if (score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -219,7 +228,7 @@ function handleLevels() {
   if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
   if (score == 24 && addNew12) { let c = createCoin(5550, 290); c.scale.setTo(0.5); addNew12 = false; }
   
-  if (score == 25 && addNew13) {
+  if (score >= 25 && addNew13) {
     backgroundMusic.stop();
     let win = game.add.text(game.camera.x + 900, 400, "YOU WIN!", { font: "64px Arial", fill: "#ffffff" });
     win.anchor.setTo(0.5); 
