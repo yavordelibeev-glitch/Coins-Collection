@@ -152,9 +152,9 @@ function handleMovement() {
   let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
 
   // Power Up Messages Trigger
-  if (score === 4 && addNew1) { showAlert("SPEED UP!"); }
-  if (score === 8 && addNew4) { showAlert("LOW GRAVITY!"); }
-  if (score === 14 && addNew8) { showAlert("TINY MODE!"); }
+  if (score === 0 && addNew1) { showAlert("SPEED UP!"); }
+  if (score === 10 && addNew4) { showAlert("LOW GRAVITY!"); }
+  if (score === 16 && addNew8) { showAlert("TINY MODE!"); }
   if (score === 23 && addNew12) { showAlert("CONTROLS SWITCHED!"); }
 
   if (score >= 23 && score < 25) {
@@ -162,6 +162,7 @@ function handleMovement() {
   }
 
   let speed = (score < 4) ? 500 : 250;
+  
   dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
 
   if (score >= 16 && score < 20) dude.scale.setTo(0.5, 0.5);
@@ -223,6 +224,7 @@ function handleLevels() {
   
   if (score >= 25 && addNew13) {
     backgroundMusic.stop();
+    handleMovement.stop();
     let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", { font: "80px Arial", fill: "#ffffff" });
     win.anchor.setTo(0.5); win.fixedToCamera = true;
     
