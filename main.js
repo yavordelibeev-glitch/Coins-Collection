@@ -269,7 +269,6 @@ function handleMovement() {
   if (score === 16) showAlert("TINY MODE!");
   if (score === 23) showAlert("CONTROLS SWITCHED!");
 
-  // Controls switch is strictly restricted to Level 1
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -350,9 +349,10 @@ function createCoin(x, y) {
 }
 
 function applyScreenEffects() {
+  // FIXED: Confusing vertical inversion completely removed for Level 3
   if (currentLevel === 3) {
-    game.canvas.style.transform = "scaleY(-1)"; 
-    showAlert("LEVEL 3: INVERTED GRAVITY");
+    game.canvas.style.transform = "none"; 
+    showAlert("LEVEL 3: MOVING MAZE!");
   } else {
     game.canvas.style.transform = "none";
   }
@@ -379,7 +379,6 @@ function handleLevels() {
     if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
     if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
   } else {
-    // Perfectly aligned coin layout coordinates for custom generated levels (+50 left, +350 right)
     if (score == 2 && addNew) {
       if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
       if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
@@ -454,7 +453,6 @@ function handleLevels() {
       currentLevel++;
       score = 0;
       
-      // HARD REVERT: Clean inputs and clear control inversion safely on transition
       buttonStates.left = false;
       buttonStates.right = false;
       buttonStates.jump = false;
