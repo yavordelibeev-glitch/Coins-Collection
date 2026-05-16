@@ -62,7 +62,6 @@ function create() {
   alertText.visible = false;
 
   // --- MENU ---
-  // FIXED: Put the titleText back so the game doesn't crash when hiding it!
   titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
   titleText.anchor.setTo(0.5); titleText.fixedToCamera = true;
 
