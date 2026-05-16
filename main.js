@@ -20,7 +20,7 @@ let isGameOver = false,
 // UI Elements
 let startButton, titleText, musicToggle, fullScreenButton, alertText;
 
-let currentLevel = 1; // Tracks current stage progress
+let currentLevel = 1; 
 
 let addNew = true,
   addNew1 = true,
@@ -36,7 +36,7 @@ let addNew = true,
   addNew12 = true,
   addNew13 = true;
 
-// Level Layout Mapping Configuration
+// Fixed Level Configurations
 const levelConfigs = {
   1: {
     platforms: [
@@ -48,24 +48,23 @@ const levelConfigs = {
   2: {
     platforms: [
       {x: 100, y: 250},
-      {x: 500, y: 400, isMoving: true, minX: 350, maxX: 750, speed: 4},
-      {x: 1000, y: 300, isMoving: true, minX: 850, maxX: 1250, speed: -4},
-      {x: 1500, y: 500},
-      {x: 1900, y: 250, isMoving: true, minX: 1750, maxX: 2150, speed: 5},
-      {x: 2400, y: 400},
-      {x: 2900, y: 300, isMoving: true, minX: 2700, maxX: 3200, speed: -3},
-      {x: 3500, y: 200},
-      {x: 4000, y: 450, isMoving: true, minX: 3800, maxX: 4300, speed: 6},
-      {x: 4600, y: 300},
-      {x: 5100, y: 400},
-      {x: 5400, y: 250}
+      {x: 600, y: 450, isMoving: true, minX: 400, maxX: 900, speed: 4},
+      {x: 1100, y: 300, isMoving: true, minX: 900, maxX: 1400, speed: -4},
+      {x: 1600, y: 500},
+      {x: 2100, y: 250, isMoving: true, minX: 1800, maxX: 2400, speed: 5},
+      {x: 2700, y: 400},
+      {x: 3300, y: 300, isMoving: true, minX: 3000, maxX: 3600, speed: -4},
+      {x: 3900, y: 200},
+      {x: 4400, y: 450, isMoving: true, minX: 4100, maxX: 4800, speed: 6},
+      {x: 5000, y: 300},
+      {x: 5400, y: 400}
     ]
   },
   3: {
     platforms: [
-      {x: 100, y: 300}, {x: 400, y: 200}, {x: 800, y: 450}, {x: 1200, y: 250},
-      {x: 1600, y: 400}, {x: 2000, y: 150}, {x: 2400, y: 350}, {x: 2800, y: 500},
-      {x: 3200, y: 250}, {x: 3700, y: 400}, {x: 4200, y: 150}, {x: 4700, y: 350}, {x: 5300, y: 300}
+      {x: 100, y: 300}, {x: 450, y: 200}, {x: 850, y: 450}, {x: 1250, y: 250},
+      {x: 1650, y: 400}, {x: 2100, y: 150}, {x: 2500, y: 350}, {x: 2950, y: 500},
+      {x: 3400, y: 250}, {x: 3900, y: 400}, {x: 4400, y: 150}, {x: 4900, y: 350}, {x: 5400, y: 300}
     ]
   }
 };
@@ -97,16 +96,12 @@ function create() {
   dude.animations.add("left", [0, 1, 2, 3], 10, true);
   dude.animations.add("right", [5, 6, 7, 8], 10, true);
 
-  coins = game.add.group();
-  coins.enableBody = true;
-
   platforma();
   moneta();
 
   backgroundMusic = game.add.audio("backgroundSound");
   backgroundMusic.loop = true;
 
-  // Notification Text (Power Ups)
   alertText = game.add.text(900, 400, "", {
     font: "bold 80px Arial",
     fill: "#f39c12",
@@ -152,7 +147,6 @@ function create() {
   musicToggle.fixedToCamera = true;
   musicToggle.events.onInputDown.add(toggleMusic);
 
-  // --- CONTROLS ---
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
@@ -207,7 +201,6 @@ function update() {
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
   if (dude.y > 800) {
-    // Reset visual transforms back to clean screen layout if you die
     game.canvas.style.transform = "none";
     showGameOver();
   }
@@ -229,7 +222,6 @@ function updateMovingPlatforms() {
         p.moveSpeed *= -1;
       }
 
-      // Drag player along smoothly when resting atop a sliding block
       if (game.physics.arcade.collide(dude, p) && dude.body.touching.down) {
         dude.x += p.moveSpeed;
       }
@@ -262,7 +254,6 @@ function handleMovement() {
   let isRight = d.isDown || cursors.right.isDown || buttonStates.right;
   let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
 
-  // Power Up Messages Trigger (Names and thresholds untouched)
   if (score == 0) {
     showAlert("SPEED UP!");
   }
@@ -309,7 +300,7 @@ function handleMovement() {
 }
 
 function platforma() {
-  if (plat) plat.destroy(); // Wipe out old platforms during teleport load
+  if (plat) plat.destroy();
   
   plat = game.add.group();
   plat.enableBody = true;
@@ -330,12 +321,16 @@ function platforma() {
 }
 
 function moneta() {
-  if (coins) coins.destroy(); // Clear existing layout group
+  if (coins) coins.destroy();
   coins = game.add.group();
   coins.enableBody = true;
 
-  createCoin(200, 180);
-  createCoin(400, 180);
+  // Dynamically map coins based on the active platforms list across any level!
+  const currentPlatforms = levelConfigs[currentLevel].platforms;
+  
+  // Always spawn initial 2 coins on the first two platforms
+  if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 100, currentPlatforms[0].y - 70);
+  if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 100, currentPlatforms[1].y - 70);
 }
 
 function createCoin(x, y) {
@@ -348,10 +343,10 @@ function createCoin(x, y) {
 
 function applyScreenEffects() {
   if (currentLevel === 2) {
-    game.canvas.style.transform = "scaleX(-1)"; // Horizontal Flip (Mirror Mode)
+    game.canvas.style.transform = "scaleX(-1)"; 
     showAlert("LEVEL 2: MIRROR WORLD");
   } else if (currentLevel === 3) {
-    game.canvas.style.transform = "scaleY(-1)"; // Vertical Flip (Upside-Down)
+    game.canvas.style.transform = "scaleY(-1)"; 
     showAlert("LEVEL 3: INVERTED GRAVITY");
   } else {
     game.canvas.style.transform = "none";
@@ -359,79 +354,77 @@ function applyScreenEffects() {
 }
 
 function handleLevels() {
+  const currentPlatforms = levelConfigs[currentLevel].platforms;
+
+  // Dynamically load layout configurations relative to whatever active level we're exploring
   if (score == 2 && addNew) {
-    createCoin(550, 400);
-    createCoin(850, 400);
+    if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 150, currentPlatforms[1].y - 70);
+    if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 100, currentPlatforms[2].y - 70);
     addNew = false;
   }
   if (score == 4 && addNew1) {
-    createCoin(1050, 280);
-    createCoin(1350, 280);
+    if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 150, currentPlatforms[2].y - 70);
+    if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 100, currentPlatforms[3].y - 70);
     addNew1 = false;
   }
   if (score == 6 && addNew2) {
-    createCoin(1650, 400);
-    createCoin(1950, 400);
+    if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 150, currentPlatforms[3].y - 70);
+    if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 100, currentPlatforms[4].y - 70);
     addNew2 = false;
   }
   if (score == 8 && addNew3) {
-    createCoin(1650, 120);
-    createCoin(1950, 120);
+    if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 150, currentPlatforms[4].y - 70);
+    if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 100, currentPlatforms[5].y - 70);
     addNew3 = false;
   }
   if (score == 10 && addNew4) {
-    createCoin(2050, 255);
-    createCoin(2350, 255);
+    if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 150, currentPlatforms[5].y - 70);
+    if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 100, currentPlatforms[6].y - 70);
     addNew4 = false;
   }
   if (score == 12 && addNew6) {
-    createCoin(2650, 60);
-    createCoin(2950, 60);
+    if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 150, currentPlatforms[6].y - 70);
+    if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 100, currentPlatforms[7].y - 70);
     addNew6 = false;
   }
   if (score == 14 && addNew7) {
-    createCoin(3250, 200);
-    createCoin(3500, 200);
+    if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 150, currentPlatforms[7].y - 70);
+    if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 100, currentPlatforms[8].y - 70);
     addNew7 = false;
   }
   if (score == 16 && addNew8) {
-    createCoin(2950, 400);
-    createCoin(3250, 400);
+    if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 150, currentPlatforms[8].y - 70);
+    if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 100, currentPlatforms[9].y - 70);
     addNew8 = false;
   }
   if (score == 18 && addNew9) {
-    createCoin(3950, 240);
-    createCoin(4250, 240);
+    if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 150, currentPlatforms[9].y - 70);
+    if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 100, currentPlatforms[10].y - 70);
     addNew9 = false;
   }
   if (score == 20 && addNew10) {
-    createCoin(4550, 55);
-    createCoin(4850, 55);
+    if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 150, currentPlatforms[10].y - 70);
+    if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 100, currentPlatforms[11].y - 70);
     addNew10 = false;
   }
   if (score == 22 && addNew11) {
-    createCoin(4750, 300);
-    createCoin(5050, 300);
+    if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 150, currentPlatforms[11].y - 70);
+    let finalPlatformIndex = currentPlatforms.length - 1;
+    let c = createCoin(currentPlatforms[finalPlatformIndex].x + 100, currentPlatforms[finalPlatformIndex].y - 110);
+    c.scale.setTo(0.5); // Giant End Coin setup
     addNew11 = false;
   }
-  if (score == 24 && addNew12) {
-    let c = createCoin(5550, 290);
-    c.scale.setTo(0.5);
-    addNew12 = false;
-  }
 
-  if (score >= 25 && addNew13) {
-    // If there is another level configured, teleport the player there
+  if (score >= 24 && addNew13) {
     if (levelConfigs[currentLevel + 1]) {
       currentLevel++;
       score = 0;
       
-      // Reset logic variables for coin loading system
+      // FIXED: Crucial gate adjustments so subsequent level configs can fire
       addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
       addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
-      addNew10 = true; addNew11 = true; addNew12 = true;
+      addNew10 = true; addNew11 = true; addNew12 = true; addNew13 = true;
 
-      // Teleport character back to start coordinates
       dude.x = 100;
       dude.y = 50;
       dude.body.velocity.x = 0;
@@ -441,7 +434,6 @@ function handleLevels() {
       moneta();
       applyScreenEffects();
     } else {
-      // Out of configured levels: Win Game Scenario
       backgroundMusic.stop();
       game.canvas.style.transform = "none";
       
