@@ -8,7 +8,7 @@ const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
 
 let dude, bg, backgroundMusic, score = 0;
 let plat, coins;
-let w, a, d, cursors, fKey, mKey;
+let w, a, d, cursors, fKey, mKey, spaceKey;
 let buttonStates = { left: false, right: false, jump: false };
 let isGameOver = false, isStarted = false, musicOn = true;
 
@@ -84,9 +84,11 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   fKey = game.input.keyboard.addKey(Phaser.Keyboard.F);
   mKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
+  spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACE);
 
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
+  spaceKey.onDown.add(startGame);
 }
 
 function showAlert(message) {
