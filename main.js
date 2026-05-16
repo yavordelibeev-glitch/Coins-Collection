@@ -269,6 +269,7 @@ function handleMovement() {
   if (score === 16) showAlert("TINY MODE!");
   if (score === 23) showAlert("CONTROLS SWITCHED!");
 
+  // Controls switch is strictly restricted to Level 1
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -349,22 +350,12 @@ function createCoin(x, y) {
 }
 
 function applyScreenEffects() {
-  // FIXED: Confusing vertical inversion completely removed for Level 3
-  if (currentLevel === 3) {
-    game.canvas.style.transform = "none"; 
-    showAlert("LEVEL 3: MOVING MAZE!");
-  } else {
-    game.canvas.style.transform = "none";
-  }
+  // Screen inversion formatting safely disabled across levels
+  game.canvas.style.transform = "none";
 }
 
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
-
-  if (currentLevel === 2 && score === 4) {
-    game.canvas.style.transform = "scaleX(-1)";
-    showAlert("LEVEL 2: MIRROR WORLD!");
-  }
 
   if (currentLevel === 1) {
     if (score == 2 && addNew) { createCoin(550, 400); createCoin(850, 400); addNew = false; }
