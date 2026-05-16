@@ -1,70 +1,75 @@
 "use strict";
 
 const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
-  preload,
-  create,
-  update,
+  preload: preload,
+  create: create,
+  update: update
 });
 
-let dude,
-  bg,
-  backgroundMusic,
-  score = 0;
-let plat, coins;
-let w, a, d, cursors, fKey, mKey, spaceBar;
+let dude;
+let bg;
+let backgroundMusic;
+let score = 0;
+let plat;
+let coins;
+let w, a, d;
+let cursors;
+let fKey, mKey, spaceBar;
 let buttonStates = { left: false, right: false, jump: false };
-let isGameOver = false,
-  isStarted = false,
-  musicOn = true;
+let isGameOver = false;
+let isStarted = false;
+let musicOn = true;
 
-// UI Elements
-let startButton, titleText, musicToggle, fullScreenButton, alertText;
+let startButton;
+let titleText;
+let musicToggle;
+let fullScreenButton;
+let alertText;
 
-let currentLevel = 1; 
+let currentLevel = 1;
 
-let addNew = true,
-  addNew1 = true,
-  addNew2 = true,
-  addNew3 = true,
-  addNew4 = true,
-  addNew6 = true,
-  addNew7 = true,
-  addNew8 = true,
-  addNew9 = true,
-  addNew10 = true,
-  addNew11 = true,
-  addNew12 = true,
-  addNew13 = true;
+let addNew = true;
+let addNew1 = true;
+let addNew2 = true;
+let addNew3 = true;
+let addNew4 = true;
+let addNew6 = true;
+let addNew7 = true;
+let addNew8 = true;
+let addNew9 = true;
+let addNew10 = true;
+let addNew11 = true;
+let addNew12 = true;
+let addNew13 = true;
 
-// Fixed Level Configurations
 const levelConfigs = {
   1: {
     platforms: [
-      {x: 100, y: 250}, {x: 500, y: 470}, {x: 1000, y: 350}, {x: 1600, y: 480},
-      {x: 1600, y: 200}, {x: 2000, y: 350}, {x: 2600, y: 150}, {x: 3200, y: 300},
-      {x: 2900, y: 480}, {x: 3900, y: 300}, {x: 4500, y: 100}, {x: 4700, y: 400}, {x: 5400, y: 400}
+      { x: 100, y: 250 }, { x: 500, y: 470 }, { x: 1000, y: 350 }, { x: 1600, y: 480 },
+      { x: 1600, y: 200 }, { x: 2000, y: 350 }, { x: 2600, y: 150 }, { x: 3200, y: 300 },
+      { x: 2900, y: 480 }, { x: 3900, y: 300 }, { x: 4500, y: 100 }, { x: 4700, y: 400 }, { x: 5400, y: 400 }
     ]
   },
   2: {
     platforms: [
-      {x: 100, y: 250},
-      {x: 600, y: 450, isMoving: true, minX: 400, maxX: 900, speed: 4},
-      {x: 1100, y: 300, isMoving: true, minX: 900, maxX: 1400, speed: -4},
-      {x: 1600, y: 500},
-      {x: 2100, y: 250, isMoving: true, minX: 1800, maxX: 2400, speed: 5},
-      {x: 2700, y: 400},
-      {x: 3300, y: 300, isMoving: true, minX: 3000, maxX: 3600, speed: -4},
-      {x: 3900, y: 200},
-      {x: 4400, y: 450, isMoving: true, minX: 4100, maxX: 4800, speed: 6},
-      {x: 5000, y: 300},
-      {x: 5400, y: 400}
+      { x: 100, y: 250 },
+      { x: 600, y: 450, isMoving: true, minX: 400, maxX: 900, speed: 4 },
+      { x: 1100, y: 300, isMoving: true, minX: 900, maxX: 1400, speed: -4 },
+      { x: 1600, y: 500 },
+      { x: 2100, y: 250, isMoving: true, minX: 1800, maxX: 2400, speed: 5 },
+      { x: 2700, y: 400 },
+      { x: 3300, y: 300, isMoving: true, minX: 3000, maxX: 3600, speed: -4 },
+      { x: 3900, y: 200 },
+      { x: 4400, y: 450, isMoving: true, minX: 4100, maxX: 4800, speed: 6 },
+      { x: 5000, y: 300 },
+      { x: 5400, y: 400 }
     ]
   },
   3: {
     platforms: [
-      {x: 100, y: 300}, {x: 450, y: 200}, {x: 850, y: 450}, {x: 1250, y: 250},
-      {x: 1650, y: 400}, {x: 2100, y: 150}, {x: 2500, y: 350}, {x: 2950, y: 500},
-      {x: 3400, y: 250}, {x: 3900, y: 400}, {x: 4400, y: 150}, {x: 4900, y: 350}, {x: 5400, y: 300}
+      { x: 100, y: 300 }, { x: 450, y: 200 }, { x: 850, y: 450 }, { x: 1250, y: 250 },
+      { x: 1650, y: 400 }, { x: 2100, y: 150 }, { x: 2500, y: 350 }, { x: 2950, y: 500 },
+      { x: 3400, y: 250 }, { x: 3900, y: 400 }, { x: 4400, y: 150 }, { x: 4900, y: 350 }, { x: 5400, y: 300 }
     ]
   }
 };
@@ -104,16 +109,15 @@ function create() {
 
   alertText = game.add.text(900, 400, "", {
     font: "bold 80px Arial",
-    fill: "#f39c12",
+    fill: "#f39c12"
   });
   alertText.anchor.setTo(0.5);
   alertText.fixedToCamera = true;
   alertText.visible = false;
 
-  // --- MENU ---
   titleText = game.add.text(900, 250, "DESERT CLIMBER", {
     font: "bold 100px Arial",
-    fill: "#ffffff",
+    fill: "#ffffff"
   });
   titleText.anchor.setTo(0.5);
   titleText.fixedToCamera = true;
@@ -121,7 +125,7 @@ function create() {
   startButton = game.add.text(900, 450, "START GAME", {
     font: "60px Arial",
     fill: "#00ff00",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.5)"
   });
   startButton.anchor.setTo(0.5);
   startButton.inputEnabled = true;
@@ -131,7 +135,7 @@ function create() {
   fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN (F)", {
     font: "40px Arial",
     fill: "#ffff00",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.5)"
   });
   fullScreenButton.anchor.setTo(0.5);
   fullScreenButton.inputEnabled = true;
@@ -140,7 +144,7 @@ function create() {
 
   musicToggle = game.add.text(1750, 50, "MUSIC: ON (M)", {
     font: "30px Arial",
-    fill: "#ffffff",
+    fill: "#ffffff"
   });
   musicToggle.anchor.setTo(1, 0);
   musicToggle.inputEnabled = true;
@@ -163,14 +167,17 @@ function create() {
 function showAlert(message) {
   alertText.text = message;
   alertText.visible = true;
-  game.time.events.add(Phaser.Timer.SECOND * 1.5, () => {
+  game.time.events.add(Phaser.Timer.SECOND * 1.5, function() {
     alertText.visible = false;
   });
 }
 
 function goFull() {
-  if (game.scale.isFullScreen) game.scale.stopFullScreen();
-  else game.scale.startFullScreen(false);
+  if (game.scale.isFullScreen) {
+    game.scale.stopFullScreen();
+  } else {
+    game.scale.startFullScreen(false);
+  }
 }
 
 function startGame() {
@@ -200,6 +207,7 @@ function update() {
   if (!isStarted || isGameOver) return;
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
+  
   if (dude.y > 800) {
     game.canvas.style.transform = "none";
     showGameOver();
@@ -210,7 +218,7 @@ function update() {
 }
 
 function updateMovingPlatforms() {
-  plat.forEach((p) => {
+  plat.forEach(function(p) {
     if (p.isMovingObj) {
       p.x += p.moveSpeed;
 
@@ -236,17 +244,17 @@ function showGameOver() {
   
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", {
     font: "80px Arial",
-    fill: "#ff0000",
+    fill: "#ff0000"
   });
   goText.anchor.setTo(0.5);
   
   let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", {
     font: "50px Arial",
-    fill: "#ffffff",
+    fill: "#ffffff"
   });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
-  restText.events.onInputDown.add(() => {
+  restText.events.onInputDown.add(function() {
     location.reload();
   });
 }
@@ -256,20 +264,12 @@ function handleMovement() {
   let isRight = d.isDown || cursors.right.isDown || buttonStates.right;
   let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
 
-  if (score == 0) {
-    showAlert("SPEED UP!");
-  }
-  if (score == 10) {
-    showAlert("LOW GRAVITY!");
-  }
-  if (score == 16) {
-    showAlert("TINY MODE!");
-  }
-  if (score == 23) {
-    showAlert("CONTROLS SWITCHED!");
-  }
+  if (score === 0) showAlert("SPEED UP!");
+  if (score === 10) showAlert("LOW GRAVITY!");
+  if (score === 16) showAlert("TINY MODE!");
+  if (score === 23) showAlert("CONTROLS SWITCHED!");
 
-  // Switched controls logic - strictly limited to the end of Level 1 now
+  // Controls switch is strictly restricted to Level 1
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -278,10 +278,13 @@ function handleMovement() {
 
   let speed = score < 4 ? 500 : 250;
 
-  dude.body.gravity.y = score >= 10 && score < 14 ? 200 : 1000;
+  dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
 
-  if (score >= 16 && score < 20) dude.scale.setTo(0.5, 0.5);
-  else dude.scale.setTo(1, 1);
+  if (score >= 16 && score < 20) {
+    dude.scale.setTo(0.5, 0.5);
+  } else {
+    dude.scale.setTo(1, 1);
+  }
 
   if (isLeft) {
     dude.body.velocity.x = -speed;
@@ -309,7 +312,7 @@ function platforma() {
   plat.enableBody = true;
   
   const points = levelConfigs[currentLevel].platforms;
-  points.forEach((p) => {
+  points.forEach(function(p) {
     let obj = plat.create(p.x, p.y, "plat");
     obj.scale.setTo(0.5);
     obj.body.immovable = true;
@@ -358,7 +361,6 @@ function applyScreenEffects() {
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
 
-  // Mirror effect triggers inside level 2 after getting 4 coins
   if (currentLevel === 2 && score === 4) {
     game.canvas.style.transform = "scaleX(-1)";
     showAlert("LEVEL 2: MIRROR WORLD!");
@@ -377,60 +379,60 @@ function handleLevels() {
     if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
     if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
   } else {
-    // Beautiful spacing for levels 2 & 3: opposite sides of the platform block
+    // Perfectly aligned coin layout coordinates for custom generated levels (+50 left, +350 right)
     if (score == 2 && addNew) {
-      if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
-      if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
+      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
+      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
       addNew = false;
     }
     if (score == 4 && addNew1) {
-      if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70);
-      if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70);
+      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70);
+      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70);
       addNew1 = false;
     }
     if (score == 6 && addNew2) {
-      if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70);
-      if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70);
+      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70);
+      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70);
       addNew2 = false;
     }
     if (score == 8 && addNew3) {
-      if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70);
-      if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70);
+      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70);
+      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70);
       addNew3 = false;
     }
     if (score == 10 && addNew4) {
-      if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70);
-      if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70);
+      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70);
+      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70);
       addNew4 = false;
     }
     if (score == 12 && addNew6) {
-      if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70);
-      if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70);
+      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70);
+      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70);
       addNew6 = false;
     }
     if (score == 14 && addNew7) {
-      if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70);
-      if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70);
+      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70);
+      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70);
       addNew7 = false;
     }
     if (score == 16 && addNew8) {
-      if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70);
-      if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70);
+      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70);
+      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70);
       addNew8 = false;
     }
     if (score == 18 && addNew9) {
-      if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70);
-      if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70);
+      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70);
+      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70);
       addNew9 = false;
     }
     if (score == 20 && addNew10) {
-      if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70);
-      if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70);
+      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70);
+      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70);
       addNew10 = false;
     }
     if (score == 22 && addNew11) {
-      if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70);
-      if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70);
+      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70);
+      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70);
       addNew11 = false;
     }
   }
@@ -452,7 +454,7 @@ function handleLevels() {
       currentLevel++;
       score = 0;
       
-      // Wipe input states instantly upon teleportation
+      // HARD REVERT: Clean inputs and clear control inversion safely on transition
       buttonStates.left = false;
       buttonStates.right = false;
       buttonStates.jump = false;
@@ -478,19 +480,19 @@ function handleLevels() {
       
       let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", {
         font: "80px Arial",
-        fill: "#ffffff",
+        fill: "#ffffff"
       });
       win.anchor.setTo(0.5);
       win.fixedToCamera = true;
 
       let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", {
         font: "50px Arial",
-        fill: "#00ff00",
+        fill: "#00ff00"
       });
       restText.anchor.setTo(0.5);
       restText.fixedToCamera = true;
       restText.inputEnabled = true;
-      restText.events.onInputDown.add(() => {
+      restText.events.onInputDown.add(function() {
         location.reload();
       });
 
@@ -506,17 +508,17 @@ function collectCoin(player, coin) {
 }
 
 function setupMobileButtons() {
-  const createBtn = (x, y, w, h, type) => {
+  const createBtn = function(x, y, w, h, type) {
     let g = game.add.graphics(0, 0);
     g.beginFill(0xffffff, 0.3);
     g.drawRect(0, 0, w, h);
     let btn = game.add.sprite(x, y, g.generateTexture());
     btn.inputEnabled = true;
     btn.fixedToCamera = true;
-    btn.events.onInputDown.add(() => {
+    btn.events.onInputDown.add(function() {
       buttonStates[type] = true;
     });
-    btn.events.onInputUp.add(() => {
+    btn.events.onInputUp.add(function() {
       buttonStates[type] = false;
     });
     g.destroy();
