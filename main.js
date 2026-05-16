@@ -233,11 +233,13 @@ function showGameOver() {
   isGameOver = true;
   dude.kill();
   backgroundMusic.stop();
+  
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", {
     font: "80px Arial",
     fill: "#ff0000",
   });
   goText.anchor.setTo(0.5);
+  
   let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", {
     font: "50px Arial",
     fill: "#ffffff",
