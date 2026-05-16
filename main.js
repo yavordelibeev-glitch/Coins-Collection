@@ -62,6 +62,9 @@ function create() {
   alertText.visible = false;
 
   // --- MENU ---
+  // FIXED: Put the titleText back so the game doesn't crash when hiding it!
+  titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
+  titleText.anchor.setTo(0.5); titleText.fixedToCamera = true;
 
   startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
   startButton.anchor.setTo(0.5); startButton.inputEnabled = true; startButton.fixedToCamera = true;
@@ -101,6 +104,9 @@ function goFull() {
 }
 
 function startGame() {
+  // FIXED: Safety check so pressing Spacebar during the game doesn't restart this logic
+  if (isStarted) return; 
+
   isStarted = true;
   dude.visible = true;
   dude.body.gravity.y = 1000; 
