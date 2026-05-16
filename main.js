@@ -20,6 +20,8 @@ let isGameOver = false,
 // UI Elements
 let startButton, titleText, musicToggle, fullScreenButton, alertText;
 
+let currentLevel = 1; // Tracks current stage progress
+
 let addNew = true,
   addNew1 = true,
   addNew2 = true,
@@ -33,6 +35,40 @@ let addNew = true,
   addNew11 = true,
   addNew12 = true,
   addNew13 = true;
+
+// Level Layout Mapping Configuration
+const levelConfigs = {
+  1: {
+    platforms: [
+      {x: 100, y: 250}, {x: 500, y: 470}, {x: 1000, y: 350}, {x: 1600, y: 480},
+      {x: 1600, y: 200}, {x: 2000, y: 350}, {x: 2600, y: 150}, {x: 3200, y: 300},
+      {x: 2900, y: 480}, {x: 3900, y: 300}, {x: 4500, y: 100}, {x: 4700, y: 400}, {x: 5400, y: 400}
+    ]
+  },
+  2: {
+    platforms: [
+      {x: 100, y: 250},
+      {x: 500, y: 400, isMoving: true, minX: 350, maxX: 750, speed: 4},
+      {x: 1000, y: 300, isMoving: true, minX: 850, maxX: 1250, speed: -4},
+      {x: 1500, y: 500},
+      {x: 1900, y: 250, isMoving: true, minX: 1750, maxX: 2150, speed: 5},
+      {x: 2400, y: 400},
+      {x: 2900, y: 300, isMoving: true, minX: 2700, maxX: 3200, speed: -3},
+      {x: 3500, y: 200},
+      {x: 4000, y: 450, isMoving: true, minX: 3800, maxX: 4300, speed: 6},
+      {x: 4600, y: 300},
+      {x: 5100, y: 400},
+      {x: 5400, y: 250}
+    ]
+  },
+  3: {
+    platforms: [
+      {x: 100, y: 300}, {x: 400, y: 200}, {x: 800, y: 450}, {x: 1200, y: 250},
+      {x: 1600, y: 400}, {x: 2000, y: 150}, {x: 2400, y: 350}, {x: 2800, y: 500},
+      {x: 3200, y: 250}, {x: 3700, y: 400}, {x: 4200, y: 150}, {x: 4700, y: 350}, {x: 5300, y: 300}
+    ]
+  }
+};
 
 function preload() {
   game.load.image("bg", "desert.png");
@@ -144,7 +180,6 @@ function goFull() {
 }
 
 function startGame() {
-  // FIXED: Safety check so pressing Spacebar during the game doesn't restart this logic
   if (isStarted) return;
 
   isStarted = true;
@@ -171,9 +206,35 @@ function update() {
   if (!isStarted || isGameOver) return;
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
-  if (dude.y > 800) showGameOver();
+  if (dude.y > 800) {
+    // Reset visual transforms back to clean screen layout if you die
+    game.canvas.style.transform = "none";
+    showGameOver();
+  }
   handleLevels();
   handleMovement();
+  updateMovingPlatforms();
+}
+
+function updateMovingPlatforms() {
+  plat.forEach((p) => {
+    if (p.isMovingObj) {
+      p.x += p.moveSpeed;
+
+      if (p.x >= p.maxX) {
+        p.x = p.maxX;
+        p.moveSpeed *= -1;
+      } else if (p.x <= p.minX) {
+        p.x = p.minX;
+        p.moveSpeed *= -1;
+      }
+
+      // Drag player along smoothly when resting atop a sliding block
+      if (game.physics.arcade.collide(dude, p) && dude.body.touching.down) {
+        dude.x += p.moveSpeed;
+      }
+    }
+  });
 }
 
 function showGameOver() {
@@ -201,7 +262,7 @@ function handleMovement() {
   let isRight = d.isDown || cursors.right.isDown || buttonStates.right;
   let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
 
-  // Power Up Messages Trigger
+  // Power Up Messages Trigger (Names and thresholds untouched)
   if (score == 0) {
     showAlert("SPEED UP!");
   }
@@ -248,31 +309,31 @@ function handleMovement() {
 }
 
 function platforma() {
+  if (plat) plat.destroy(); // Wipe out old platforms during teleport load
+  
   plat = game.add.group();
   plat.enableBody = true;
-  const points = [
-    [100, 250],
-    [500, 470],
-    [1000, 350],
-    [1600, 480],
-    [1600, 200],
-    [2000, 350],
-    [2600, 150],
-    [3200, 300],
-    [2900, 480],
-    [3900, 300],
-    [4500, 100],
-    [4700, 400],
-    [5400, 400],
-  ];
+  
+  const points = levelConfigs[currentLevel].platforms;
   points.forEach((p) => {
-    let obj = plat.create(p[0], p[1], "plat");
+    let obj = plat.create(p.x, p.y, "plat");
     obj.scale.setTo(0.5);
     obj.body.immovable = true;
+    
+    if (p.isMoving) {
+      obj.isMovingObj = true;
+      obj.minX = p.minX;
+      obj.maxX = p.maxX;
+      obj.moveSpeed = p.speed;
+    }
   });
 }
 
 function moneta() {
+  if (coins) coins.destroy(); // Clear existing layout group
+  coins = game.add.group();
+  coins.enableBody = true;
+
   createCoin(200, 180);
   createCoin(400, 180);
 }
@@ -283,6 +344,18 @@ function createCoin(x, y) {
   c.animations.play("spin");
   c.scale.setTo(0.2);
   return c;
+}
+
+function applyScreenEffects() {
+  if (currentLevel === 2) {
+    game.canvas.style.transform = "scaleX(-1)"; // Horizontal Flip (Mirror Mode)
+    showAlert("LEVEL 2: MIRROR WORLD");
+  } else if (currentLevel === 3) {
+    game.canvas.style.transform = "scaleY(-1)"; // Vertical Flip (Upside-Down)
+    showAlert("LEVEL 3: INVERTED GRAVITY");
+  } else {
+    game.canvas.style.transform = "none";
+  }
 }
 
 function handleLevels() {
@@ -348,28 +421,51 @@ function handleLevels() {
   }
 
   if (score >= 25 && addNew13) {
-    backgroundMusic.stop();
-    
-    let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", {
-      font: "80px Arial",
-      fill: "#ffffff",
-    });
-    win.anchor.setTo(0.5);
-    win.fixedToCamera = true;
+    // If there is another level configured, teleport the player there
+    if (levelConfigs[currentLevel + 1]) {
+      currentLevel++;
+      score = 0;
+      
+      // Reset logic variables for coin loading system
+      addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
+      addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
+      addNew10 = true; addNew11 = true; addNew12 = true;
 
-    let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", {
-      font: "50px Arial",
-      fill: "#00ff00",
-    });
-    restText.anchor.setTo(0.5);
-    restText.fixedToCamera = true;
-    restText.inputEnabled = true;
-    restText.events.onInputDown.add(() => {
-      location.reload();
-    });
+      // Teleport character back to start coordinates
+      dude.x = 100;
+      dude.y = 50;
+      dude.body.velocity.x = 0;
+      dude.body.velocity.y = 0;
 
-    dude.kill();
-    addNew13 = false;
+      platforma();
+      moneta();
+      applyScreenEffects();
+    } else {
+      // Out of configured levels: Win Game Scenario
+      backgroundMusic.stop();
+      game.canvas.style.transform = "none";
+      
+      let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", {
+        font: "80px Arial",
+        fill: "#ffffff",
+      });
+      win.anchor.setTo(0.5);
+      win.fixedToCamera = true;
+
+      let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", {
+        font: "50px Arial",
+        fill: "#00ff00",
+      });
+      restText.anchor.setTo(0.5);
+      restText.fixedToCamera = true;
+      restText.inputEnabled = true;
+      restText.events.onInputDown.add(() => {
+        location.reload();
+      });
+
+      dude.kill();
+      addNew13 = false;
+    }
   }
 }
 
