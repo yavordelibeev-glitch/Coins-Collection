@@ -325,12 +325,15 @@ function moneta() {
   coins = game.add.group();
   coins.enableBody = true;
 
-  // Dynamically map coins based on the active platforms list across any level!
-  const currentPlatforms = levelConfigs[currentLevel].platforms;
-  
-  // Always spawn initial 2 coins on the first two platforms
-  if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 100, currentPlatforms[0].y - 70);
-  if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 100, currentPlatforms[1].y - 70);
+  // Level 1 starts with exact original coordinates, other levels dynamically map
+  if (currentLevel === 1) {
+    createCoin(200, 180);
+    createCoin(400, 180);
+  } else {
+    const currentPlatforms = levelConfigs[currentLevel].platforms;
+    if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 100, currentPlatforms[0].y - 70);
+    if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 100, currentPlatforms[1].y - 70);
+  }
 }
 
 function createCoin(x, y) {
@@ -342,13 +345,11 @@ function createCoin(x, y) {
 }
 
 function applyScreenEffects() {
-  if (currentLevel === 2) {
-    game.canvas.style.transform = "scaleX(-1)"; 
-    showAlert("LEVEL 2: MIRROR WORLD");
-  } else if (currentLevel === 3) {
+  // FIXED: Level 2 only flips after 4 coins are gathered, managed inside handleLevels now.
+  if (currentLevel === 3) {
     game.canvas.style.transform = "scaleY(-1)"; 
     showAlert("LEVEL 3: INVERTED GRAVITY");
-  } else {
+  } else if (currentLevel === 1) {
     game.canvas.style.transform = "none";
   }
 }
@@ -356,71 +357,101 @@ function applyScreenEffects() {
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
 
-  // Dynamically load layout configurations relative to whatever active level we're exploring
-  if (score == 2 && addNew) {
-    if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 150, currentPlatforms[1].y - 70);
-    if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 100, currentPlatforms[2].y - 70);
-    addNew = false;
-  }
-  if (score == 4 && addNew1) {
-    if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 150, currentPlatforms[2].y - 70);
-    if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 100, currentPlatforms[3].y - 70);
-    addNew1 = false;
-  }
-  if (score == 6 && addNew2) {
-    if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 150, currentPlatforms[3].y - 70);
-    if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 100, currentPlatforms[4].y - 70);
-    addNew2 = false;
-  }
-  if (score == 8 && addNew3) {
-    if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 150, currentPlatforms[4].y - 70);
-    if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 100, currentPlatforms[5].y - 70);
-    addNew3 = false;
-  }
-  if (score == 10 && addNew4) {
-    if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 150, currentPlatforms[5].y - 70);
-    if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 100, currentPlatforms[6].y - 70);
-    addNew4 = false;
-  }
-  if (score == 12 && addNew6) {
-    if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 150, currentPlatforms[6].y - 70);
-    if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 100, currentPlatforms[7].y - 70);
-    addNew6 = false;
-  }
-  if (score == 14 && addNew7) {
-    if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 150, currentPlatforms[7].y - 70);
-    if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 100, currentPlatforms[8].y - 70);
-    addNew7 = false;
-  }
-  if (score == 16 && addNew8) {
-    if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 150, currentPlatforms[8].y - 70);
-    if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 100, currentPlatforms[9].y - 70);
-    addNew8 = false;
-  }
-  if (score == 18 && addNew9) {
-    if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 150, currentPlatforms[9].y - 70);
-    if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 100, currentPlatforms[10].y - 70);
-    addNew9 = false;
-  }
-  if (score == 20 && addNew10) {
-    if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 150, currentPlatforms[10].y - 70);
-    if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 100, currentPlatforms[11].y - 70);
-    addNew10 = false;
-  }
-  if (score == 22 && addNew11) {
-    if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 150, currentPlatforms[11].y - 70);
-    let finalPlatformIndex = currentPlatforms.length - 1;
-    let c = createCoin(currentPlatforms[finalPlatformIndex].x + 100, currentPlatforms[finalPlatformIndex].y - 110);
-    c.scale.setTo(0.5); // Giant End Coin setup
-    addNew11 = false;
+  // FIXED: Trigger screen mirroring ONLY after collecting 4 coins on Level 2
+  if (currentLevel === 2 && score === 4) {
+    game.canvas.style.transform = "scaleX(-1)";
+    showAlert("LEVEL 2: MIRROR WORLD!");
   }
 
-  if (score >= 24 && addNew13) {
+  if (currentLevel === 1) {
+    // Exact original coordinates for Level 1
+    if (score == 2 && addNew) { createCoin(550, 400); createCoin(850, 400); addNew = false; }
+    if (score == 4 && addNew1) { createCoin(1050, 280); createCoin(1350, 280); addNew1 = false; }
+    if (score == 6 && addNew2) { createCoin(1650, 400); createCoin(1950, 400); addNew2 = false; }
+    if (score == 8 && addNew3) { createCoin(1650, 120); createCoin(1950, 120); addNew3 = false; }
+    if (score == 10 && addNew4) { createCoin(2050, 255); createCoin(2350, 255); addNew4 = false; }
+    if (score == 12 && addNew6) { createCoin(2650, 60); createCoin(2950, 60); addNew6 = false; }
+    if (score == 14 && addNew7) { createCoin(3250, 200); createCoin(3500, 200); addNew7 = false; }
+    if (score == 16 && addNew8) { createCoin(2950, 400); createCoin(3250, 400); addNew8 = false; }
+    if (score == 18 && addNew9) { createCoin(3950, 240); createCoin(4250, 240); addNew9 = false; }
+    if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
+    if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
+  } else {
+    // Dynamic coordinate layout system for subsequent custom levels
+    if (score == 2 && addNew) {
+      if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 150, currentPlatforms[1].y - 70);
+      if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 100, currentPlatforms[2].y - 70);
+      addNew = false;
+    }
+    if (score == 4 && addNew1) {
+      if(currentPlatforms[2]) createCoin(currentPlatforms[2].x + 150, currentPlatforms[2].y - 70);
+      if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 100, currentPlatforms[3].y - 70);
+      addNew1 = false;
+    }
+    if (score == 6 && addNew2) {
+      if(currentPlatforms[3]) createCoin(currentPlatforms[3].x + 150, currentPlatforms[3].y - 70);
+      if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 100, currentPlatforms[4].y - 70);
+      addNew2 = false;
+    }
+    if (score == 8 && addNew3) {
+      if(currentPlatforms[4]) createCoin(currentPlatforms[4].x + 150, currentPlatforms[4].y - 70);
+      if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 100, currentPlatforms[5].y - 70);
+      addNew3 = false;
+    }
+    if (score == 10 && addNew4) {
+      if(currentPlatforms[5]) createCoin(currentPlatforms[5].x + 150, currentPlatforms[5].y - 70);
+      if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 100, currentPlatforms[6].y - 70);
+      addNew4 = false;
+    }
+    if (score == 12 && addNew6) {
+      if(currentPlatforms[6]) createCoin(currentPlatforms[6].x + 150, currentPlatforms[6].y - 70);
+      if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 100, currentPlatforms[7].y - 70);
+      addNew6 = false;
+    }
+    if (score == 14 && addNew7) {
+      if(currentPlatforms[7]) createCoin(currentPlatforms[7].x + 150, currentPlatforms[7].y - 70);
+      if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 100, currentPlatforms[8].y - 70);
+      addNew7 = false;
+    }
+    if (score == 16 && addNew8) {
+      if(currentPlatforms[8]) createCoin(currentPlatforms[8].x + 150, currentPlatforms[8].y - 70);
+      if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 100, currentPlatforms[9].y - 70);
+      addNew8 = false;
+    }
+    if (score == 18 && addNew9) {
+      if(currentPlatforms[9]) createCoin(currentPlatforms[9].x + 150, currentPlatforms[9].y - 70);
+      if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 100, currentPlatforms[10].y - 70);
+      addNew9 = false;
+    }
+    if (score == 20 && addNew10) {
+      if(currentPlatforms[10]) createCoin(currentPlatforms[10].x + 150, currentPlatforms[10].y - 70);
+      if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 100, currentPlatforms[11].y - 70);
+      addNew10 = false;
+    }
+    if (score == 22 && addNew11) {
+      if(currentPlatforms[11]) createCoin(currentPlatforms[11].x + 150, currentPlatforms[11].y - 70);
+    }
+  }
+
+  // Giant End Coin generation setup across any level
+  if (score == 24 && addNew12) {
+    if (currentLevel === 1) {
+      let c = createCoin(5550, 290);
+      c.scale.setTo(0.5);
+    } else {
+      let finalPlatformIndex = currentPlatforms.length - 1;
+      let c = createCoin(currentPlatforms[finalPlatformIndex].x + 100, currentPlatforms[finalPlatformIndex].y - 110);
+      c.scale.setTo(0.5);
+    }
+    addNew12 = false;
+  }
+
+  if (score >= 25 && addNew13) {
     if (levelConfigs[currentLevel + 1]) {
       currentLevel++;
       score = 0;
       
-      // FIXED: Crucial gate adjustments so subsequent level configs can fire
+      // Reset layout control triggers
       addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
       addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
       addNew10 = true; addNew11 = true; addNew12 = true; addNew13 = true;
@@ -430,9 +461,13 @@ function handleLevels() {
       dude.body.velocity.x = 0;
       dude.body.velocity.y = 0;
 
+      // Reset style to normal initially for Level 2
+      game.canvas.style.transform = "none";
+
       platforma();
       moneta();
       applyScreenEffects();
+      showAlert("WELCOME TO LEVEL " + currentLevel);
     } else {
       backgroundMusic.stop();
       game.canvas.style.transform = "none";
