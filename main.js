@@ -349,7 +349,7 @@ function handleLevels() {
 
   if (score >= 25 && addNew13) {
     backgroundMusic.stop();
-    handleMovement.stop();
+    
     let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", {
       font: "80px Arial",
       fill: "#ffffff",
