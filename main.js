@@ -205,6 +205,10 @@ function toggleMusic() {
 
 function update() {
   if (!isStarted || isGameOver) return;
+
+  // Move platforms first before calculating player interactions
+  updateMovingPlatforms();
+
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
   
@@ -214,24 +218,25 @@ function update() {
   }
   handleLevels();
   handleMovement();
-  updateMovingPlatforms();
 }
 
 function updateMovingPlatforms() {
   plat.forEach(function(p) {
     if (p.isMovingObj) {
-      p.x += p.moveSpeed;
+      // Update velocity instead of directly overriding raw x coordinates to keep solid physics alignment
+      p.body.velocity.x = p.moveSpeed * 60; 
 
       if (p.x >= p.maxX) {
         p.x = p.maxX;
-        p.moveSpeed *= -1;
+        p.moveSpeed = -Math.abs(p.moveSpeed);
       } else if (p.x <= p.minX) {
         p.x = p.minX;
-        p.moveSpeed *= -1;
+        p.moveSpeed = Math.abs(p.moveSpeed);
       }
 
-      if (game.physics.arcade.collide(dude, p) && dude.body.touching.down) {
-        dude.x += p.moveSpeed;
+      // Drag player along smoothly when riding the active platform
+      if (game.physics.arcade.intersects(dude, p) && dude.y + dude.height <= p.y + 10) {
+        dude.body.velocity.x += p.body.velocity.x;
       }
     }
   });
@@ -269,7 +274,6 @@ function handleMovement() {
   if (score === 16) showAlert("TINY MODE!");
   if (score === 23) showAlert("CONTROLS SWITCHED!");
 
-  // Controls switch is strictly restricted to Level 1
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -317,11 +321,14 @@ function platforma() {
     obj.scale.setTo(0.5);
     obj.body.immovable = true;
     
+    // Explicitly configure arcade physics options for moving platforms
     if (p.isMoving) {
       obj.isMovingObj = true;
       obj.minX = p.minX;
       obj.maxX = p.maxX;
       obj.moveSpeed = p.speed;
+      obj.body.friction.x = 1; 
+      obj.body.bounce.set(0);
     }
   });
 }
@@ -350,7 +357,6 @@ function createCoin(x, y) {
 }
 
 function applyScreenEffects() {
-  // Screen inversion formatting safely disabled across levels
   game.canvas.style.transform = "none";
 }
 
