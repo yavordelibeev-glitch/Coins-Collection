@@ -1,12 +1,3 @@
-Ah, that's because your `score` resets to `0` when you change levels, but the controls switch logic was checking `if (score >= 23 && score < 25)`. Since your score is no longer in that range on the new level, your controls *should* have reverted—**unless** the player was holding down a movement key exactly during the teleport frame, causing Phaser's input state to get stuck!
-
-To fix this completely and make sure nothing gets left behind when changing zones, I have added a **hard reset** to the input states inside the level transition block. This forces `buttonStates.left` and `buttonStates.right` back to `false` and forces the controls switch to wipe clean.
-
-I also double-checked the logic for why it felt like "nothing changed." The variables handling your unique level modifiers (`addNew`, `addNew1`, etc.) were resetting, but the screen effects function `applyScreenEffects()` wasn't clearing the CSS transform when entering Level 2. I've fixed that too, so Level 2 starts completely clean, completely normal, and then flips *only* when you hit 4 coins.
-
-Here is the fully fixed, ready-to-go source code:
-
-```javascript
 "use strict";
 
 const game = new Phaser.Game(1800, 800, Phaser.AUTO, "game-canvas", {
@@ -276,7 +267,7 @@ function handleMovement() {
     showAlert("CONTROLS SWITCHED!");
   }
 
-  // Swap active buttons only on level 1's final steps
+  // FIXED: Restrict switched control effect ONLY to Level 1 final moments
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -340,6 +331,7 @@ function moneta() {
     createCoin(400, 180);
   } else {
     const currentPlatforms = levelConfigs[currentLevel].platforms;
+    // FIXED SPACING: Left side and right side distribution on first platform
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 50, currentPlatforms[0].y - 70);
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 350, currentPlatforms[0].y - 70);
   }
@@ -365,7 +357,7 @@ function applyScreenEffects() {
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
 
-  // Trigger screen mirroring ONLY after collecting 4 coins on Level 2
+  // Mirror effect triggers ONLY after 4 coins on level 2
   if (currentLevel === 2 && score === 4) {
     game.canvas.style.transform = "scaleX(-1)";
     showAlert("LEVEL 2: MIRROR WORLD!");
@@ -384,6 +376,7 @@ function handleLevels() {
     if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
     if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
   } else {
+    // FIXED SPACING FOR ADAPTIVE LAYOUTS: Left side (+50) and Right side (+350)
     if (score == 2 && addNew) {
       if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
       if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
@@ -458,7 +451,7 @@ function handleLevels() {
       currentLevel++;
       score = 0;
       
-      // FIXED: Wipe input button states to prevent stuck keys across dimensions
+      // FIXED: Hard wipe held button states on teleports to completely kill control swaps
       buttonStates.left = false;
       buttonStates.right = false;
       buttonStates.jump = false;
@@ -472,7 +465,6 @@ function handleLevels() {
       dude.body.velocity.x = 0;
       dude.body.velocity.y = 0;
 
-      // Force view clean explicitly here too
       game.canvas.style.transform = "none";
 
       platforma();
@@ -532,5 +524,3 @@ function setupMobileButtons() {
   createBtn(280, 520, 200, 200, "right");
   createBtn(1520, 480, 240, 240, "jump");
 }
-
-```
