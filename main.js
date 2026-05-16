@@ -148,8 +148,8 @@ function handleMovement() {
 
   // Power Up Messages Trigger
   if (score === 4 && addNew1) { showAlert("SPEED UP!"); }
-  if (score === 10 && addNew4) { showAlert("LOW GRAVITY!"); }
-  if (score === 16 && addNew8) { showAlert("TINY MODE!"); }
+  if (score === 8 && addNew4) { showAlert("LOW GRAVITY!"); }
+  if (score === 14 && addNew8) { showAlert("TINY MODE!"); }
   if (score === 23 && addNew12) { showAlert("CONTROLS SWITCHED!"); }
 
   if (score >= 23 && score < 25) {
