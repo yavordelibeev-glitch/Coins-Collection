@@ -153,8 +153,8 @@ function handleMovement() {
 
   // Power Up Messages Trigger
   if (score === 0 && addNew1) { showAlert("SPEED UP!"); }
-  if (score === 10 && addNew4) { showAlert("LOW GRAVITY!"); }
-  if (score === 16 && addNew8) { showAlert("TINY MODE!"); }
+  if (score === 12 && addNew4) { showAlert("LOW GRAVITY!"); }
+  if (score === 18 && addNew8) { showAlert("TINY MODE!"); }
   if (score === 23 && addNew12) { showAlert("CONTROLS SWITCHED!"); }
 
   if (score >= 23 && score < 25) {
@@ -162,7 +162,7 @@ function handleMovement() {
   }
 
   let speed = (score < 4) ? 500 : 250;
-  
+
   dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
 
   if (score >= 16 && score < 20) dude.scale.setTo(0.5, 0.5);
