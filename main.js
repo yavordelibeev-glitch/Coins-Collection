@@ -205,10 +205,10 @@ function handleMovement() {
   if (score == 0) {
     showAlert("SPEED UP!");
   }
-  if (score == 12) {
+  if (score == 10) {
     showAlert("LOW GRAVITY!");
   }
-  if (score == 18) {
+  if (score == 16) {
     showAlert("TINY MODE!");
   }
   if (score == 23) {
