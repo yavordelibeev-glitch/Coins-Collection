@@ -269,7 +269,7 @@ function handleMovement() {
     showAlert("CONTROLS SWITCHED!");
   }
 
-  // FIXED: Restrict switched control effect ONLY to Level 1 final moments
+  // Switched controls logic - strictly limited to the end of Level 1 now
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = isLeft;
     isLeft = isRight;
@@ -333,7 +333,6 @@ function moneta() {
     createCoin(400, 180);
   } else {
     const currentPlatforms = levelConfigs[currentLevel].platforms;
-    // FIXED SPACING: Left side and right side distribution on first platform
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 50, currentPlatforms[0].y - 70);
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 350, currentPlatforms[0].y - 70);
   }
@@ -359,7 +358,7 @@ function applyScreenEffects() {
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
 
-  // Mirror effect triggers ONLY after 4 coins on level 2
+  // Mirror effect triggers inside level 2 after getting 4 coins
   if (currentLevel === 2 && score === 4) {
     game.canvas.style.transform = "scaleX(-1)";
     showAlert("LEVEL 2: MIRROR WORLD!");
@@ -378,7 +377,7 @@ function handleLevels() {
     if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
     if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
   } else {
-    // FIXED SPACING FOR ADAPTIVE LAYOUTS: Left side (+50) and Right side (+350)
+    // Beautiful spacing for levels 2 & 3: opposite sides of the platform block
     if (score == 2 && addNew) {
       if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
       if(currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
@@ -453,7 +452,7 @@ function handleLevels() {
       currentLevel++;
       score = 0;
       
-      // FIXED: Hard wipe held button states on teleports to completely kill control swaps
+      // Wipe input states instantly upon teleportation
       buttonStates.left = false;
       buttonStates.right = false;
       buttonStates.jump = false;
