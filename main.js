@@ -206,8 +206,10 @@ function toggleMusic() {
 function update() {
   if (!isStarted || isGameOver) return;
 
+  // Run platform positions first
   updateMovingPlatforms();
 
+  // Perform full physics environment integration
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
   
@@ -222,7 +224,9 @@ function update() {
 function updateMovingPlatforms() {
   plat.forEach(function(p) {
     if (p.isMovingObj) {
-      p.body.velocity.x = p.moveSpeed * 60; 
+      // Direct raw positional adjustment to avoid breaking body velocity matrices
+      let oldX = p.x;
+      p.x += p.moveSpeed;
 
       if (p.x >= p.maxX) {
         p.x = p.maxX;
@@ -232,8 +236,13 @@ function updateMovingPlatforms() {
         p.moveSpeed = Math.abs(p.moveSpeed);
       }
 
-      if (game.physics.arcade.intersects(dude, p) && dude.y + dude.height <= p.y + 10) {
-        dude.body.velocity.x += p.body.velocity.x;
+      // Track the accurate distance moved this specific tick frame
+      let deltaX = p.x - oldX;
+
+      // Lock player cleanly onto the platform if standing squarely on top of it
+      if (dude.body.touching.down && (game.physics.arcade.intersects(dude, p) || (dude.x + dude.width >= p.x && dude.x <= p.x + p.width && Math.abs((dude.y + dude.height) - p.y) < 6))) {
+        dude.x += deltaX;
+        dude.y = p.y - dude.height; // Instantly clamp to top surface to prevent passing through
       }
     }
   });
@@ -359,7 +368,6 @@ function applyScreenEffects() {
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
 
-  // Level 1 logic based on exact continuous score milestones (0 to 24)
   if (currentLevel === 1) {
     if (score == 2 && addNew) { createCoin(550, 400); createCoin(850, 400); addNew = false; }
     if (score == 4 && addNew1) { createCoin(1050, 280); createCoin(1350, 280); addNew1 = false; }
@@ -379,7 +387,6 @@ function handleLevels() {
       addNew12 = false;
     }
   } 
-  // Level 2 logic mapped continuously to scores (25 to 49)
   else if (currentLevel === 2) {
     if (score == 27 && addNew) {
       if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
@@ -443,7 +450,6 @@ function handleLevels() {
       addNew12 = false;
     }
   } 
-  // Level 3 logic mapped continuously to scores (50 to 74)
   else if (currentLevel === 3) {
     if (score == 52 && addNew) {
       if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
@@ -508,7 +514,6 @@ function handleLevels() {
     }
   }
 
-  // Level Progression Gate Logic (Checked continuously via score milestones)
   if (((currentLevel === 1 && score >= 25) || (currentLevel === 2 && score >= 50)) && addNew13) {
     currentLevel++;
     
