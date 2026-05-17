@@ -12,14 +12,14 @@ let backgroundMusic;
 let score = 0;
 let plat;
 let coins;
-let w, a, s, d, shiftKey, escKey; // Added escKey
+let w, a, s, d, shiftKey, escKey;
 let cursors;
 let fKey, mKey, spaceBar;
 let buttonStates = { left: false, right: false, jump: false };
 let isGameOver = false;
 let isStarted = false;
 let musicOn = true;
-let isPaused = false; // Track pause state
+let isPaused = false;
 
 let startButton;
 let titleText;
@@ -28,19 +28,18 @@ let fullScreenButton;
 let alertText;
 let cooldownText;
 
-// New UI Elements
+// UI & Menu Groups
 let gameTimerText;
 let startTime = 0;
 let elapsedTime = 0;
 let pausedTimeBuffer = 0;
 let pauseMenuGroup;
-let mobilePauseButton;
 let mobileControlsGroup;
 
 let currentLevel = 1;
 let lastFacingDirection = "right";
 
-// Propulsion Gun Configurations
+// Propulsion Gun System
 let canDash = true;
 let dashCooldownTimer = 0;
 let dashLockTimer = 0; 
@@ -126,71 +125,50 @@ function create() {
   backgroundMusic = game.add.audio("backgroundSound");
   backgroundMusic.loop = true;
 
-  alertText = game.add.text(900, 400, "", {
-    font: "bold 80px Arial",
-    fill: "#f39c12"
-  });
+  // Global Core User Interfaces
+  alertText = game.add.text(900, 400, "", { font: "bold 80px Arial", fill: "#f39c12" });
   alertText.anchor.setTo(0.5);
   alertText.fixedToCamera = true;
   alertText.visible = false;
 
-  cooldownText = game.add.text(50, 50, "PROPULSION GUN: READY [SHIFT]", {
-    font: "bold 24px Arial",
-    fill: "#00ff00"
-  });
+  cooldownText = game.add.text(50, 50, "PROPULSION GUN: READY [SHIFT]", { font: "bold 24px Arial", fill: "#00ff00" });
   cooldownText.fixedToCamera = true;
   cooldownText.visible = false;
 
-  // Visual Speedrun Timer Layout
-  gameTimerText = game.add.text(50, 95, "TIME: 0.00s", {
-    font: "bold 24px Arial",
-    fill: "#ffffff"
-  });
+  gameTimerText = game.add.text(50, 95, "TIME: 0.00s", { font: "bold 24px Arial", fill: "#ffffff" });
   gameTimerText.fixedToCamera = true;
   gameTimerText.visible = false;
 
-  titleText = game.add.text(900, 250, "DESERT CLIMBER", {
-    font: "bold 100px Arial",
-    fill: "#ffffff"
-  });
+  // Title Layout
+  titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
   titleText.anchor.setTo(0.5);
   titleText.fixedToCamera = true;
 
-  startButton = game.add.text(900, 450, "START GAME", {
-    font: "60px Arial",
-    fill: "#00ff00",
-    backgroundColor: "rgba(0,0,0,0.5)"
-  });
+  startButton = game.add.text(900, 450, "START GAME", { font: "60px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
   startButton.anchor.setTo(0.5);
   startButton.inputEnabled = true;
   startButton.fixedToCamera = true;
   startButton.events.onInputDown.add(startGame);
 
-  fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN (F)", {
-    font: "40px Arial",
-    fill: "#ffff00",
-    backgroundColor: "rgba(0,0,0,0.5)"
-  });
+  fullScreenButton = game.add.text(900, 580, "GO FULLSCREEN (F)", { font: "40px Arial", fill: "#ffff00", backgroundColor: "rgba(0,0,0,0.5)" });
   fullScreenButton.anchor.setTo(0.5);
   fullScreenButton.inputEnabled = true;
   fullScreenButton.fixedToCamera = true;
   fullScreenButton.events.onInputDown.add(goFull);
 
-  musicToggle = game.add.text(1750, 50, "MUSIC: ON (M)", {
-    font: "30px Arial",
-    fill: "#ffffff"
-  });
+  musicToggle = game.add.text(1750, 50, "MUSIC: ON (M)", { font: "30px Arial", fill: "#ffffff" });
   musicToggle.anchor.setTo(1, 0);
   musicToggle.inputEnabled = true;
   musicToggle.fixedToCamera = true;
   musicToggle.events.onInputDown.add(toggleMusic);
 
+  // Key Mappings Configuration Block
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   s = game.input.keyboard.addKey(Phaser.Keyboard.S);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
   shiftKey = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
-  escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC); // ESC Hook
+  escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
 
   cursors = game.input.keyboard.createCursorKeys();
   fKey = game.input.keyboard.addKey(Phaser.Keyboard.F);
@@ -202,14 +180,24 @@ function create() {
   spaceBar.onDown.add(startGame);
   
   shiftKey.onDown.add(firePropulsionGun);
-  escKey.onDown.add(togglePauseMenu); // Hook to pop up pause screen
+  escKey.onDown.add(togglePauseMenu);
   
+  // Mobile Dashboard & Pause Menus Instantiated Early
+  mobileControlsGroup = game.add.group();
+  mobileControlsGroup.fixedToCamera = true;
+  mobileControlsGroup.visible = false;
+  setupMobileButtons();
+
+  pauseMenuGroup = game.add.group();
+  pauseMenuGroup.fixedToCamera = true;
+  pauseMenuGroup.visible = false;
   createPauseMenuUI();
 }
 
 function showAlert(message) {
   alertText.text = message;
   alertText.visible = true;
+  game.world.bringToTop(alertText);
   game.time.events.add(Phaser.Timer.SECOND * 1.5, function() {
     alertText.visible = false;
   });
@@ -237,7 +225,7 @@ function firePropulsionGun() {
 
   let inputLeft = a.isDown || cursors.left.isDown || buttonStates.left;
   let inputRight = d.isDown || cursors.right.isDown || buttonStates.right;
-  let inputUp = w.isDown || cursors.up.isDown || buttonStates.jump; // Maps touch jump layout vector up
+  let inputUp = w.isDown || cursors.up.isDown || buttonStates.jump;
   let inputDown = s.isDown || cursors.down.isDown;
 
   if (currentLevel === 1 && score >= 23 && score < 25) {
@@ -247,7 +235,6 @@ function firePropulsionGun() {
   }
 
   let fired = false;
-
   dude.body.velocity.x = 0;
   dude.body.velocity.y = 0;
 
@@ -295,16 +282,25 @@ function startGame() {
   isStarted = true;
   dude.visible = true;
   dude.body.gravity.y = 1000;
+  
   titleText.visible = false;
   startButton.visible = false;
   fullScreenButton.visible = false;
+  
   cooldownText.visible = true; 
   gameTimerText.visible = true;
-  startTime = game.time.time; // Sync game run duration clock 
+  mobileControlsGroup.visible = true; // Make sure touch items show up immediately!
+  
+  startTime = game.time.time;
   
   if (musicOn) backgroundMusic.play();
-  setupMobileButtons();
+  
   game.camera.follow(dude);
+  
+  // Enforce layered UI stacking hierarchy
+  game.world.bringToTop(mobileControlsGroup);
+  game.world.bringToTop(cooldownText);
+  game.world.bringToTop(gameTimerText);
 }
 
 function toggleMusic() {
@@ -316,29 +312,24 @@ function toggleMusic() {
   }
 }
 
-// Global architecture to build overlay scene parameters out for clean pauses
 function createPauseMenuUI() {
-  pauseMenuGroup = game.add.group();
-  pauseMenuGroup.fixedToCamera = true;
-  pauseMenuGroup.visible = false;
-
-  // Dark semi-transparent filter sheet behind pop up text fields
   let pauseBg = game.add.graphics(0, 0);
-  pauseBg.beginFill(0x000000, 0.7);
+  pauseBg.beginFill(0x000000, 0.8);
   pauseBg.drawRect(0, 0, 1800, 800);
+  pauseBg.endFill();
   pauseMenuGroup.add(pauseBg);
 
   let pTitle = game.add.text(900, 250, "GAME PAUSED", { font: "bold 80px Arial", fill: "#ffffff" });
   pTitle.anchor.setTo(0.5);
   pauseMenuGroup.add(pTitle);
 
-  let resumeBtn = game.add.text(900, 400, "RESUME GAME", { font: "50px Arial", fill: "#00ff00", backgroundColor: "rgba(0,0,0,0.5)" });
+  let resumeBtn = game.add.text(900, 420, "RESUME GAME", { font: "50px Arial", fill: "#00ff00", backgroundColor: "rgba(255,255,255,0.1)" });
   resumeBtn.anchor.setTo(0.5);
   resumeBtn.inputEnabled = true;
   resumeBtn.events.onInputDown.add(togglePauseMenu);
   pauseMenuGroup.add(resumeBtn);
 
-  let restartBtn = game.add.text(900, 530, "RESTART MAP", { font: "50px Arial", fill: "#ff3333", backgroundColor: "rgba(0,0,0,0.5)" });
+  let restartBtn = game.add.text(900, 550, "RESTART MAP", { font: "50px Arial", fill: "#ff3333", backgroundColor: "rgba(255,255,255,0.1)" });
   restartBtn.anchor.setTo(0.5);
   restartBtn.inputEnabled = true;
   restartBtn.events.onInputDown.add(function() {
@@ -354,29 +345,22 @@ function togglePauseMenu() {
 
   if (isPaused) {
     pauseMenuGroup.visible = true;
-    if (mobileControlsGroup) mobileControlsGroup.visible = false; // Cover underlying controls mapping cleanly
-    // Freeze active engine velocities completely
+    game.world.bringToTop(pauseMenuGroup); // Ensure overlay takes execution precedence visibly
     dude.body.enable = false; 
     if (musicOn) backgroundMusic.pause();
-    // Cache current runtime array offset parameters
     pausedTimeBuffer = game.time.time;
   } else {
     pauseMenuGroup.visible = false;
-    if (mobileControlsGroup) mobileControlsGroup.visible = true;
     dude.body.enable = true;
     if (musicOn) backgroundMusic.resume();
-    // Compensate live duration clocks cleanly across breaks
     startTime += (game.time.time - pausedTimeBuffer);
   }
 }
 
 function update() {
   if (!isStarted || isGameOver) return;
-
-  // Completely break processing logic flows if scene pause flag is intercepted
   if (isPaused) return;
 
-  // Calculate live gameplay session clock frames cleanly
   elapsedTime = (game.time.time - startTime) / 1000;
   gameTimerText.text = "TIME: " + elapsedTime.toFixed(2) + "s";
 
@@ -422,19 +406,12 @@ function showGameOver() {
   isGameOver = true;
   dude.kill();
   backgroundMusic.stop();
-  if (mobileControlsGroup) mobileControlsGroup.visible = false;
-  if (mobilePauseButton) mobilePauseButton.visible = false;
+  mobileControlsGroup.visible = false;
   
-  let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", {
-    font: "80px Arial",
-    fill: "#ff0000"
-  });
+  let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
   
-  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", {
-    font: "50px Arial",
-    fill: "#ffffff"
-  });
+  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { font: "50px Arial", fill: "#ffffff" });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
   restText.events.onInputDown.add(function() {
@@ -722,20 +699,13 @@ function handleLevels() {
   } else if (currentLevel === 3 && score >= 75 && addNew13) {
     backgroundMusic.stop();
     game.canvas.style.transform = "none";
-    if (mobileControlsGroup) mobileControlsGroup.visible = false;
-    if (mobilePauseButton) mobilePauseButton.visible = false;
+    mobileControlsGroup.visible = false;
     
-    let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", {
-      font: "80px Arial",
-      fill: "#ffffff"
-    });
+    let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", { font: "80px Arial", fill: "#ffffff" });
     win.anchor.setTo(0.5);
     win.fixedToCamera = true;
 
-    let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", {
-      font: "50px Arial",
-      fill: "#00ff00"
-    });
+    let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", { font: "50px Arial", fill: "#00ff00" });
     restText.anchor.setTo(0.5);
     restText.fixedToCamera = true;
     restText.inputEnabled = true;
@@ -754,22 +724,23 @@ function collectCoin(player, coin) {
 }
 
 function setupMobileButtons() {
-  mobileControlsGroup = game.add.group();
-
   const createBtn = function(x, y, w, h, type, labelText) {
     let g = game.add.graphics(0, 0);
-    g.beginFill(0xffffff, 0.25);
+    g.beginFill(0xffffff, 0.35);
     g.drawRoundedRect(0, 0, w, h, 15);
+    g.endFill();
+    
     let btn = game.add.sprite(x, y, g.generateTexture());
     btn.inputEnabled = true;
-    btn.fixedToCamera = true;
     
-    let label = game.add.text(w/2, h/2, labelText, { font: "bold 28px Arial", fill: "#ffffff" });
+    let label = game.add.text(w / 2, h / 2, labelText, { font: "bold 32px Arial", fill: "#ffffff" });
     label.anchor.setTo(0.5);
     btn.addChild(label);
 
     if (type === "dash") {
       btn.events.onInputDown.add(firePropulsionGun);
+    } else if (type === "pause") {
+      btn.events.onInputDown.add(togglePauseMenu);
     } else {
       btn.events.onInputDown.add(function() { buttonStates[type] = true; });
       btn.events.onInputUp.add(function() { buttonStates[type] = false; });
@@ -779,26 +750,12 @@ function setupMobileButtons() {
     g.destroy();
   };
 
-  // Standard D-Pad Layout Layouts
-  createBtn(50, 520, 160, 160, "left", "◀");
-  createBtn(240, 520, 160, 160, "right", "▶");
+  // Safe Generation of UI Components Linked Directly onto Camera Contexts
+  createBtn(50, 550, 160, 160, "left", "◀");
+  createBtn(250, 550, 160, 160, "right", "▶");
   
-  // Mobile Action Commands (Jump + Propulsion Gun Trigger Button Placement)
-  createBtn(1380, 520, 170, 160, "dash", "BLAST");
-  createBtn(1580, 520, 170, 160, "jump", "JUMP");
+  createBtn(1380, 550, 170, 160, "dash", "BLAST");
+  createBtn(1580, 550, 170, 160, "jump", "JUMP");
 
-  // Floating Upper Corner Pause Touch Box Anchor Point
-  let gPause = game.add.graphics(0, 0);
-  gPause.beginFill(0xffffff, 0.3);
-  gPause.drawRoundedRect(0, 0, 100, 60, 8);
-  mobilePauseButton = game.add.sprite(1600, 120, gPause.generateTexture());
-  mobilePauseButton.inputEnabled = true;
-  mobilePauseButton.fixedToCamera = true;
-  
-  let pauseLabel = game.add.text(50, 30, "||", { font: "bold 24px Arial", fill: "#ffffff" });
-  pauseLabel.anchor.setTo(0.5);
-  mobilePauseButton.addChild(pauseLabel);
-  mobilePauseButton.events.onInputDown.add(togglePauseMenu);
-  
-  gPause.destroy();
+  createBtn(1650, 40, 100, 65, "pause", "||");
 }
