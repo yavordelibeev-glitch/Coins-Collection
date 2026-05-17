@@ -548,7 +548,7 @@ function handleLevels() {
     if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
     if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
     if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
-    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, createCoin(currentPlatforms[6].y - 70); addNew6 = false; }
+    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
     if (score == 64 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
     if (score == 66 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
     if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
