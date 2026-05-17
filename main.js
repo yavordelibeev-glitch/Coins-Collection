@@ -27,7 +27,7 @@ let musicToggle;
 let fullScreenButton;
 let alertText;
 let cooldownText;
-let tpCooldownText; // New UI element to track right hand blink cooldown
+let tpCooldownText; 
 
 let gameTimerText;
 let startTime = 0;
@@ -49,8 +49,11 @@ const DASH_SPEED = 1300;
 // Right Hand Phase Shift Teleport Variables
 let canTP = true;
 let tpCooldownTimer = 0;
-const TP_COOLDOWN_TIME = 15; // Strict 15-second tracking window
+const TP_COOLDOWN_TIME = 15; 
 const PHASE_SHIFT_DISTANCE = 250; 
+
+// Track if an arrow key was already pressed to prevent instant machine-gun teleporting
+let arrowKeysPressed = { up: false, down: false, left: false, right: false };
 
 let addNew = true;
 let addNew1 = true; let addNew2 = true; let addNew3 = true; let addNew4 = true;
@@ -133,7 +136,6 @@ function create() {
   cooldownText.fixedToCamera = true;
   cooldownText.visible = false;
 
-  // New visual overlay tracker for your Right Hand Arrow Teleport mechanic
   tpCooldownText = game.add.text(50, 90, "RIGHT TELEPORT: READY [ARROWS]", { font: "bold 24px Arial", fill: "#00ffff" });
   tpCooldownText.fixedToCamera = true;
   tpCooldownText.visible = false;
@@ -180,15 +182,8 @@ function create() {
   mKey.onDown.add(toggleMusic);
   spaceBar.onDown.add(startGame);
   
-  // Keep the left shift propulsion mechanic right where it was
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
-  
-  // Right Hand Execution Hooks - Maps Phase Teleporting explicitly to Arrow Inputs
-  cursors.left.onDown.add(function() { executeArrowTP("left"); });
-  cursors.right.onDown.add(function() { executeArrowTP("right"); });
-  cursors.up.onDown.add(function() { executeArrowTP("up"); });
-  cursors.down.onDown.add(function() { executeArrowTP("down"); });
 
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
@@ -211,7 +206,6 @@ function showAlert(message) {
 }
 
 function updateCooldown() {
-  // 1. Maintain Left Hand Propulsion Gun Timers
   if (!canDash) {
     dashCooldownTimer -= game.time.physicsElapsed;
     if (dashCooldownTimer <= 0) {
@@ -227,7 +221,6 @@ function updateCooldown() {
     dashLockTimer -= game.time.physicsElapsed;
   }
 
-  // 2. Track Right Hand Arrow Key Blink Teleport Cooldown
   if (!canTP) {
     tpCooldownTimer -= game.time.physicsElapsed;
     if (tpCooldownTimer <= 0) {
@@ -241,35 +234,50 @@ function updateCooldown() {
   }
 }
 
-// Right hand explicit positional manipulation teleport engine
-function executeArrowTP(direction) {
-  if (!isStarted || isGameOver || isPaused || !canTP) return;
+// Right-hand explicit instant Phase Shift logic checked from update loop
+function checkArrowTeleport() {
+  if (!isStarted || isGameOver || isPaused) return;
 
-  let activeDirection = direction;
+  // Track single discrete presses instead of continuous hold down state
+  if (canTP) {
+    let triggeredDirection = null;
 
-  // Invert directional coordinates safely if affected by Level 1 curse mechanics
-  if (currentLevel === 1 && score >= 23 && score < 25) {
-    if (activeDirection === "left") activeDirection = "right";
-    else if (activeDirection === "right") activeDirection = "left";
+    if (cursors.left.isDown && !arrowKeysPressed.left) triggeredDirection = "left";
+    else if (cursors.right.isDown && !arrowKeysPressed.right) triggeredDirection = "right";
+    else if (cursors.up.isDown && !arrowKeysPressed.up) triggeredDirection = "up";
+    else if (cursors.down.isDown && !arrowKeysPressed.down) triggeredDirection = "down";
+
+    if (triggeredDirection) {
+      // Manage Level 1 control inversion trap safely
+      if (currentLevel === 1 && score >= 23 && score < 25) {
+        if (triggeredDirection === "left") triggeredDirection = "right";
+        else if (triggeredDirection === "right") triggeredDirection = "left";
+      }
+
+      if (triggeredDirection === "left") {
+        dude.x = Math.max(0, dude.x - PHASE_SHIFT_DISTANCE);
+      } else if (triggeredDirection === "right") {
+        dude.x = Math.min(game.world.width - dude.width, dude.x + PHASE_SHIFT_DISTANCE);
+      } else if (triggeredDirection === "up") {
+        dude.y = Math.max(0, dude.y - PHASE_SHIFT_DISTANCE);
+      } else if (triggeredDirection === "down") {
+        dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
+      }
+
+      // Reset downward gravity drop frames to assist execution landing states
+      dude.body.velocity.y = 0;
+
+      canTP = false;
+      tpCooldownTimer = TP_COOLDOWN_TIME;
+      showAlert("PHASE SHIFT BLINK!");
+    }
   }
 
-  // Instant vector displacement mechanics
-  if (activeDirection === "left") {
-    dude.x = Math.max(0, dude.x - PHASE_SHIFT_DISTANCE);
-  } else if (activeDirection === "right") {
-    dude.x = Math.min(game.world.width - dude.width, dude.x + PHASE_SHIFT_DISTANCE);
-  } else if (activeDirection === "up") {
-    dude.y = Math.max(0, dude.y - PHASE_SHIFT_DISTANCE);
-  } else if (activeDirection === "down") {
-    dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
-  }
-
-  // Clear vertical drop tracking vectors to facilitate a safe flash recover drop
-  dude.body.velocity.y = 0;
-
-  canTP = false;
-  tpCooldownTimer = TP_COOLDOWN_TIME;
-  showAlert("PHASE SHIFT BLINK!");
+  // Update pressed states for the frame to ensure you have to release the key to blink again
+  arrowKeysPressed.left = cursors.left.isDown;
+  arrowKeysPressed.right = cursors.right.isDown;
+  arrowKeysPressed.up = cursors.up.isDown;
+  arrowKeysPressed.down = cursors.down.isDown;
 }
 
 function firePropulsionGun() {
@@ -387,6 +395,7 @@ function update() {
   gameTimerText.text = "TIME: " + elapsedTime.toFixed(2) + "s";
   updateMovingPlatforms();
   updateCooldown(); 
+  checkArrowTeleport(); // Poll right-hand arrow key actions every frame
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
   if (dude.y > 800) { game.canvas.style.transform = "none"; showGameOver(); }
@@ -424,7 +433,6 @@ function showGameOver() {
 }
 
 function handleMovement() {
-  // Restored original left-hand steering setup cleanly
   let isLeft = a.isDown || buttonStates.left;
   let isRight = d.isDown || buttonStates.right;
   let isJump = w.isDown || buttonStates.jump;
@@ -594,6 +602,5 @@ function setupMobileButtons() {
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
 
-  // Authentically-placed Top Left Pause Button
   createBtn(25, 25, 60, 60, "pause", "❚❚", 50, "Impact");
 }
