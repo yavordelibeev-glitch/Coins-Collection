@@ -182,7 +182,7 @@ function create() {
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
   
-  // Mobile Dashboard & Pause Menus Instantiated Early
+  // Mobile Dashboard Setup
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
   mobileControlsGroup.visible = false;
@@ -289,7 +289,7 @@ function startGame() {
   
   cooldownText.visible = true; 
   gameTimerText.visible = true;
-  mobileControlsGroup.visible = true; // Make sure touch items show up immediately!
+  mobileControlsGroup.visible = true; 
   
   startTime = game.time.time;
   
@@ -297,7 +297,6 @@ function startGame() {
   
   game.camera.follow(dude);
   
-  // Enforce layered UI stacking hierarchy
   game.world.bringToTop(mobileControlsGroup);
   game.world.bringToTop(cooldownText);
   game.world.bringToTop(gameTimerText);
@@ -345,7 +344,7 @@ function togglePauseMenu() {
 
   if (isPaused) {
     pauseMenuGroup.visible = true;
-    game.world.bringToTop(pauseMenuGroup); // Ensure overlay takes execution precedence visibly
+    game.world.bringToTop(pauseMenuGroup); 
     dude.body.enable = false; 
     if (musicOn) backgroundMusic.pause();
     pausedTimeBuffer = game.time.time;
@@ -724,16 +723,21 @@ function collectCoin(player, coin) {
 }
 
 function setupMobileButtons() {
-  const createBtn = function(x, y, w, h, type, labelText) {
+  const createBtn = function(x, y, w, h, type, symbol, fontSize) {
+    // We generate a transparent 1x1 placeholder structure texture to ensure input events register safely without box borders
     let g = game.add.graphics(0, 0);
-    g.beginFill(0xffffff, 0.35);
-    g.drawRoundedRect(0, 0, w, h, 15);
+    g.beginFill(0xffffff, 0.01);
+    g.drawRect(0, 0, w, h);
     g.endFill();
     
     let btn = game.add.sprite(x, y, g.generateTexture());
     btn.inputEnabled = true;
     
-    let label = game.add.text(w / 2, h / 2, labelText, { font: "bold 32px Arial", fill: "#ffffff" });
+    // Transparent icon rendering overlayed on top of interaction bounds
+    let label = game.add.text(w / 2, h / 2, symbol, { 
+      font: "bold " + fontSize + "px Arial", 
+      fill: "#ffffff" 
+    });
     label.anchor.setTo(0.5);
     btn.addChild(label);
 
@@ -750,12 +754,14 @@ function setupMobileButtons() {
     g.destroy();
   };
 
-  // Safe Generation of UI Components Linked Directly onto Camera Contexts
-  createBtn(50, 550, 160, 160, "left", "◀");
-  createBtn(250, 550, 160, 160, "right", "▶");
+  // Upscaled D-Pad Inputs Layout with Zero Bounding Box Frame
+  createBtn(50, 520, 180, 180, "left", "◀", 64);
+  createBtn(270, 520, 180, 180, "right", "▶", 64);
   
-  createBtn(1380, 550, 170, 160, "dash", "BLAST");
-  createBtn(1580, 550, 170, 160, "jump", "JUMP");
+  // Custom High-Velocity Arrow Glyphs Layout Mappings
+  createBtn(1320, 500, 200, 200, "dash", "▶▶", 60);
+  createBtn(1560, 500, 200, 200, "jump", "▲▲", 60);
 
-  createBtn(1650, 40, 100, 65, "pause", "||");
+  // Relocated Pause Button strictly isolated away from movement inputs (Top Right Frame Edge)
+  createBtn(1720, 120, 60, 60, "pause", "||", 48);
 }
