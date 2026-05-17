@@ -106,13 +106,6 @@ function create() {
   game.scale.pageAlignVertically = true;
   game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
 
-  // Crucial Fix: Listens to the browser dropping out of full screen (e.g. via ESC key) and triggers the pause menu.
-  game.scale.onFullScreenChange.add(function() {
-    if (!game.scale.isFullScreen && isStarted && !isGameOver && !isPaused) {
-      togglePauseMenu();
-    }
-  });
-
   game.world.setBounds(0, 0, 6000, 800);
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -188,11 +181,41 @@ function create() {
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
   
-  // Handles using spacebar for BOTH starting and reloading when dead
-  spaceBar.onDown.add(handleSpacebarPress);
-  
   shiftKey.onDown.add(firePropulsionGun);
-  escKey.onDown.add(togglePauseMenu);
+
+  // ⚡ HARDCORE FIXES: Vanilla JavaScript event listeners to override the browser's default restrictions
+  window.addEventListener("keydown", function(event) {
+    // 1. Force Spacebar to trigger actions regardless of browser layout/focus
+    if (event.code === "Space" || event.keyCode === 32) {
+      if (!isStarted) {
+        event.preventDefault();
+        startGame();
+      } else if (isGameOver) {
+        event.preventDefault();
+        location.reload();
+      }
+    }
+    
+    // 2. Catch the 'Escape' key globally at the window level before fullscreen eats it up
+    if (event.code === "Escape" || event.keyCode === 27) {
+      if (isStarted && !isGameOver) {
+        // If they are in fullscreen, we pause instantly as it drops out
+        if (game.scale.isFullScreen) {
+          if (!isPaused) { togglePauseMenu(); }
+        } else {
+          // If they aren't in fullscreen, just behave like a regular pause toggle
+          togglePauseMenu();
+        }
+      }
+    }
+  });
+
+  // Backup listener: If they drop out of fullscreen via ANY method (like browser escape or clicking away), force pause
+  game.scale.onFullScreenChange.add(function() {
+    if (!game.scale.isFullScreen && isStarted && !isGameOver && !isPaused) {
+      togglePauseMenu();
+    }
+  });
 
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
@@ -203,14 +226,6 @@ function create() {
   pauseMenuGroup.fixedToCamera = true;
   pauseMenuGroup.visible = false;
   createPauseMenuUI();
-}
-
-function handleSpacebarPress() {
-  if (!isStarted) {
-    startGame();
-  } else if (isGameOver) {
-    location.reload();
-  }
 }
 
 function showAlert(message) {
@@ -410,8 +425,6 @@ function togglePauseMenu() {
 
 function update() {
   if (!isStarted) return;
-  
-  // Cleaned up loop so you can still listen to a spacebar tap on the game over screen
   if (isGameOver) return; 
   if (isPaused) return;
   
@@ -561,7 +574,7 @@ function handleLevels() {
   } 
   else if (currentLevel === 3) {
     if (score == 52 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
-    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
+    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
     if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
     if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
     if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
