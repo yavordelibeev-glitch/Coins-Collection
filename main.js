@@ -498,14 +498,16 @@ function handleLevels() {
 function collectCoin(player, coin) { coin.kill(); score++; }
 
 function setupMobileButtons() {
-  const createBtn = function(x, y, w, h, type, symbol, fontSize) {
-    // Pure text injection directly mapped to camera spaces to make background boxes impossible.
+  const createBtn = function(x, y, w, h, type, symbol, fontSize, fontFamily = "Arial") {
     let label = game.add.text(x + w / 2, y + h / 2, symbol, { 
-      font: "bold " + fontSize + "px Arial", 
+      font: "bold " + fontSize + "px " + fontFamily, 
       fill: "#ffffff" 
     });
     label.anchor.setTo(0.5);
     label.inputEnabled = true;
+
+    // Apply dark text drop-shadow styling to elevate button readability over game sprites
+    label.setShadow(3, 3, "rgba(0, 0, 0, 0.6)", 2);
 
     if (type === "dash") {
       label.events.onInputDown.add(firePropulsionGun);
@@ -519,14 +521,13 @@ function setupMobileButtons() {
     mobileControlsGroup.add(label);
   };
 
-  // Raw D-Pad layout positions
+  // Mobile Core Action Controls 
   createBtn(50, 520, 180, 180, "left", "◀", 80);
   createBtn(270, 520, 180, 180, "right", "▶", 80);
   
-  // Custom glyph updates requested 
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
 
-  // Moved completely away from other buttons to prevent misclicks (Top right corner)
-  createBtn(1720, 40, 60, 60, "pause", "||", 60);
+  // Totally Isolated Game Pause Button: Pushed to the top-left margin space to look authentic
+  createBtn(1720, 25, 60, 60, "pause", "❚❚", 50, "Impact");
 }
