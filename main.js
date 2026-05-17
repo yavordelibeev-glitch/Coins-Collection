@@ -234,46 +234,53 @@ function updateCooldown() {
   }
 }
 
-// Right-hand explicit instant Phase Shift logic checked from update loop
+// Global Core calculation handler for processing right-hand Phase Shift Blinks
+function triggerTeleportLogic(direction) {
+  if (!isStarted || isGameOver || isPaused || !canTP) return;
+
+  let finalDirection = direction;
+
+  // Manage Level 1 control inversion trap safely
+  if (currentLevel === 1 && score >= 23 && score < 25) {
+    if (finalDirection === "left") finalDirection = "right";
+    else if (finalDirection === "right") finalDirection = "left";
+  }
+
+  if (finalDirection === "left") {
+    dude.x = Math.max(0, dude.x - PHASE_SHIFT_DISTANCE);
+  } else if (finalDirection === "right") {
+    dude.x = Math.min(game.world.width - dude.width, dude.x + PHASE_SHIFT_DISTANCE);
+  } else if (finalDirection === "up") {
+    dude.y = Math.max(0, dude.y - PHASE_SHIFT_DISTANCE);
+  } else if (finalDirection === "down") {
+    dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
+  }
+
+  // Reset downward gravity drop frames to assist execution landing states
+  dude.body.velocity.y = 0;
+
+  canTP = false;
+  tpCooldownTimer = TP_COOLDOWN_TIME;
+  showAlert("PHASE SHIFT BLINK!");
+}
+
+// Right-hand keyboard arrow key listener logic parsed inside update loop
 function checkArrowTeleport() {
   if (!isStarted || isGameOver || isPaused) return;
 
-  // Track single discrete presses instead of continuous hold down state
   if (canTP) {
-    let triggeredDirection = null;
+    let keyboardDir = null;
 
-    if (cursors.left.isDown && !arrowKeysPressed.left) triggeredDirection = "left";
-    else if (cursors.right.isDown && !arrowKeysPressed.right) triggeredDirection = "right";
-    else if (cursors.up.isDown && !arrowKeysPressed.up) triggeredDirection = "up";
-    else if (cursors.down.isDown && !arrowKeysPressed.down) triggeredDirection = "down";
+    if (cursors.left.isDown && !arrowKeysPressed.left) keyboardDir = "left";
+    else if (cursors.right.isDown && !arrowKeysPressed.right) keyboardDir = "right";
+    else if (cursors.up.isDown && !arrowKeysPressed.up) keyboardDir = "up";
+    else if (cursors.down.isDown && !arrowKeysPressed.down) keyboardDir = "down";
 
-    if (triggeredDirection) {
-      // Manage Level 1 control inversion trap safely
-      if (currentLevel === 1 && score >= 23 && score < 25) {
-        if (triggeredDirection === "left") triggeredDirection = "right";
-        else if (triggeredDirection === "right") triggeredDirection = "left";
-      }
-
-      if (triggeredDirection === "left") {
-        dude.x = Math.max(0, dude.x - PHASE_SHIFT_DISTANCE);
-      } else if (triggeredDirection === "right") {
-        dude.x = Math.min(game.world.width - dude.width, dude.x + PHASE_SHIFT_DISTANCE);
-      } else if (triggeredDirection === "up") {
-        dude.y = Math.max(0, dude.y - PHASE_SHIFT_DISTANCE);
-      } else if (triggeredDirection === "down") {
-        dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
-      }
-
-      // Reset downward gravity drop frames to assist execution landing states
-      dude.body.velocity.y = 0;
-
-      canTP = false;
-      tpCooldownTimer = TP_COOLDOWN_TIME;
-      showAlert("PHASE SHIFT BLINK!");
+    if (keyboardDir) {
+      triggerTeleportLogic(keyboardDir);
     }
   }
 
-  // Update pressed states for the frame to ensure you have to release the key to blink again
   arrowKeysPressed.left = cursors.left.isDown;
   arrowKeysPressed.right = cursors.right.isDown;
   arrowKeysPressed.up = cursors.up.isDown;
@@ -395,7 +402,7 @@ function update() {
   gameTimerText.text = "TIME: " + elapsedTime.toFixed(2) + "s";
   updateMovingPlatforms();
   updateCooldown(); 
-  checkArrowTeleport(); // Poll right-hand arrow key actions every frame
+  checkArrowTeleport(); 
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
   if (dude.y > 800) { game.canvas.style.transform = "none"; showGameOver(); }
@@ -541,7 +548,7 @@ function handleLevels() {
     if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
     if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
     if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
-    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
+    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, createCoin(currentPlatforms[6].y - 70); addNew6 = false; }
     if (score == 64 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
     if (score == 66 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
     if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
@@ -586,6 +593,9 @@ function setupMobileButtons() {
 
     if (type === "dash") {
       label.events.onInputDown.add(firePropulsionGun);
+    } else if (type === "tp") {
+      // Mobile TP button fires blink based on last tracked facing direction context
+      label.events.onInputDown.add(function() { triggerTeleportLogic(lastFacingDirection); });
     } else if (type === "pause") {
       label.events.onInputDown.add(togglePauseMenu);
     } else {
@@ -596,11 +606,16 @@ function setupMobileButtons() {
     mobileControlsGroup.add(label);
   };
 
+  // Left hand setup
   createBtn(50, 520, 180, 180, "left", "◀", 80);
   createBtn(270, 520, 180, 180, "right", "▶", 80);
   
+  // Right hand action deck stack
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
+  
+  // New Mobile "TP" button cleanly mapped straight above the "jump" node
+  createBtn(1540, 260, 200, 200, "tp", "✨", 90);
 
   createBtn(25, 25, 60, 60, "pause", "❚❚", 50, "Impact");
 }
