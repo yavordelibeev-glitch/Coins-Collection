@@ -106,6 +106,13 @@ function create() {
   game.scale.pageAlignVertically = true;
   game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
 
+  // Crucial Fix: Listens to the browser dropping out of full screen (e.g. via ESC key) and triggers the pause menu.
+  game.scale.onFullScreenChange.add(function() {
+    if (!game.scale.isFullScreen && isStarted && !isGameOver && !isPaused) {
+      togglePauseMenu();
+    }
+  });
+
   game.world.setBounds(0, 0, 6000, 800);
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -180,7 +187,9 @@ function create() {
 
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
-  spaceBar.onDown.add(startGame);
+  
+  // Handles using spacebar for BOTH starting and reloading when dead
+  spaceBar.onDown.add(handleSpacebarPress);
   
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
@@ -194,6 +203,14 @@ function create() {
   pauseMenuGroup.fixedToCamera = true;
   pauseMenuGroup.visible = false;
   createPauseMenuUI();
+}
+
+function handleSpacebarPress() {
+  if (!isStarted) {
+    startGame();
+  } else if (isGameOver) {
+    location.reload();
+  }
 }
 
 function showAlert(message) {
@@ -392,8 +409,12 @@ function togglePauseMenu() {
 }
 
 function update() {
-  if (!isStarted || isGameOver) return;
+  if (!isStarted) return;
+  
+  // Cleaned up loop so you can still listen to a spacebar tap on the game over screen
+  if (isGameOver) return; 
   if (isPaused) return;
+  
   elapsedTime = (game.time.time - startTime) / 1000;
   gameTimerText.text = "TIME: " + elapsedTime.toFixed(2) + "s";
   updateMovingPlatforms();
@@ -429,7 +450,7 @@ function showGameOver() {
   mobileControlsGroup.visible = false;
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
-  let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { font: "50px Arial", fill: "#ffffff" });
+  let restText = game.add.text(game.camera.x + 900, 450, "PRESS SPACE OR CLICK TO RESTART", { font: "50px Arial", fill: "#ffffff" });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
   restText.events.onInputDown.add(function() { location.reload(); });
@@ -506,7 +527,6 @@ function createCoin(x, y) {
   return c;
 }
 
-// Fixed syntax context on line 369 to reference currentPlatforms coordinate scope properly
 function applyScreenEffects() { game.canvas.style.transform = "none"; }
 
 function handleLevels() {
