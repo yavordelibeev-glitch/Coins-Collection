@@ -12,7 +12,7 @@ let backgroundMusic;
 let score = 0;
 let plat;
 let coins;
-let w, a, d, s, shiftKey; // Added S and Shift keys
+let w, a, s, d, shiftKey; // Explicitly added S and Shift
 let cursors;
 let fKey, mKey, spaceBar;
 let buttonStates = { left: false, right: false, jump: false };
@@ -25,16 +25,17 @@ let titleText;
 let musicToggle;
 let fullScreenButton;
 let alertText;
-let cooldownText; // Text display for the dash gun cooldown
+let cooldownText;
 
 let currentLevel = 1;
-let lastFacingDirection = "right"; // Track which way the player faces
+let lastFacingDirection = "right";
 
-// Dash Propulsion Gun State Variables
+// Propulsion Gun Configurations
 let canDash = true;
 let dashCooldownTimer = 0;
-const DASH_COOLDOWN_TIME = 10; // 10 second cooldown
-const DASH_SPEED = 1200; // Power of the gun blast
+let dashLockTimer = 0; // NEW: Prevents handleMovement from stopping the blast instantly
+const DASH_COOLDOWN_TIME = 10; 
+const DASH_SPEED = 1300; 
 
 let addNew = true;
 let addNew1 = true;
@@ -123,13 +124,12 @@ function create() {
   alertText.fixedToCamera = true;
   alertText.visible = false;
 
-  // Cooldown text indicator setup
   cooldownText = game.add.text(50, 50, "PROPULSION GUN: READY [SHIFT]", {
     font: "bold 24px Arial",
     fill: "#00ff00"
   });
   cooldownText.fixedToCamera = true;
-  cooldownText.visible = false; // Hidden until game officially starts
+  cooldownText.visible = false;
 
   titleText = game.add.text(900, 250, "DESERT CLIMBER", {
     font: "bold 100px Arial",
@@ -169,9 +169,9 @@ function create() {
 
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
-  s = game.input.keyboard.addKey(Phaser.Keyboard.S); // Down registration
+  s = game.input.keyboard.addKey(Phaser.Keyboard.S);
   d = game.input.keyboard.addKey(Phaser.Keyboard.D);
-  shiftKey = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT); // Dash keybind
+  shiftKey = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
 
   cursors = game.input.keyboard.createCursorKeys();
   fKey = game.input.keyboard.addKey(Phaser.Keyboard.F);
@@ -182,7 +182,6 @@ function create() {
   mKey.onDown.add(toggleMusic);
   spaceBar.onDown.add(startGame);
   
-  // Connect the gun trigger handler
   shiftKey.onDown.add(firePropulsionGun);
 }
 
@@ -194,8 +193,8 @@ function showAlert(message) {
   });
 }
 
-// Logic loop to decrement the reload clock safely over time
 function updateCooldown() {
+  // Handle gun reload timers
   if (!canDash) {
     dashCooldownTimer -= game.time.physicsElapsed;
     if (dashCooldownTimer <= 0) {
@@ -203,9 +202,13 @@ function updateCooldown() {
       cooldownText.text = "PROPULSION GUN: READY [SHIFT]";
       cooldownText.fill = "#00ff00";
     } else {
-      cooldownText.text = "PROPULSION GUN: RECHARGING (" + Math.ceil(dashCooldownTimer) + "s)";
+      cooldownText.text = "PROPULSION GUN: COOLDOWN (" + Math.ceil(dashCooldownTimer) + "s)";
       cooldownText.fill = "#ff3333";
     }
+  }
+  // Count down physics engine injection lock
+  if (dashLockTimer > 0) {
+    dashLockTimer -= game.time.physicsElapsed;
   }
 }
 
@@ -217,7 +220,6 @@ function firePropulsionGun() {
   let inputUp = w.isDown || cursors.up.isDown;
   let inputDown = s.isDown || cursors.down.isDown;
 
-  // Intercept and invert key values if under the influence of the control swap debuff
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = inputLeft;
     inputLeft = inputRight;
@@ -226,7 +228,10 @@ function firePropulsionGun() {
 
   let fired = false;
 
-  // Calculate directional vectors based on what buttons are active at time of blast
+  // Reset velocities cleanly to execute responsive momentum bursts
+  dude.body.velocity.x = 0;
+  dude.body.velocity.y = 0;
+
   if (inputLeft) {
     dude.body.velocity.x = -DASH_SPEED;
     fired = true;
@@ -239,11 +244,11 @@ function firePropulsionGun() {
     dude.body.velocity.y = -DASH_SPEED;
     fired = true;
   } else if (inputDown) {
-    dude.body.velocity.y = DASH_SPEED * 0.8; // Normalized down blast so player doesn't instantly die
+    dude.body.velocity.y = DASH_SPEED;
     fired = true;
   }
 
-  // If no buttons are held down, default fire automatically horizontally in the direction player is facing
+  // Fallback default horizontal direction blast if keys are not actively pressed
   if (!fired) {
     if (lastFacingDirection === "left") {
       dude.body.velocity.x = -DASH_SPEED;
@@ -252,9 +257,9 @@ function firePropulsionGun() {
     }
   }
 
-  // Lock the weapon systems and activate the master clock cooldown sequence
   canDash = false;
   dashCooldownTimer = DASH_COOLDOWN_TIME;
+  dashLockTimer = 0.2; // Locks normal friction constraints for 200ms so force carries through
   showAlert("PROPULSION BLAST!");
 }
 
@@ -275,7 +280,7 @@ function startGame() {
   titleText.visible = false;
   startButton.visible = false;
   fullScreenButton.visible = false;
-  cooldownText.visible = true; // Reveal UI dashboard tracker
+  cooldownText.visible = true; 
   if (musicOn) backgroundMusic.play();
   setupMobileButtons();
   game.camera.follow(dude);
@@ -294,7 +299,7 @@ function update() {
   if (!isStarted || isGameOver) return;
 
   updateMovingPlatforms();
-  updateCooldown(); // Tick structural weapon timer matrices
+  updateCooldown(); 
 
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
@@ -371,7 +376,12 @@ function handleMovement() {
 
   let speed = score < 4 ? 500 : 250;
 
-  dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
+  // Apply default gravity metrics ONLY if not actively locked in a blast state
+  if (dashLockTimer <= 0) {
+    dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
+  } else {
+    dude.body.gravity.y = 0; // Suspend gravity briefly during blast
+  }
 
   if (score >= 16 && score < 20) {
     dude.scale.setTo(0.5, 0.5);
@@ -379,27 +389,31 @@ function handleMovement() {
     dude.scale.setTo(1, 1);
   }
 
-  if (isLeft) {
-    dude.body.velocity.x = -speed;
-    dude.animations.play("left");
-    bg.tilePosition.x += 2;
-    lastFacingDirection = "left"; // Track facing direction memory
-  } else if (isRight) {
-    dude.body.velocity.x = speed;
-    dude.animations.play("right");
-    bg.tilePosition.x -= 2;
-    lastFacingDirection = "right"; // Track facing direction memory
-  } else {
-    // Retain default natural velocity slowing frames cleanly except when actively blasting out from propulsion system
-    if (Math.abs(dude.body.velocity.x) <= speed) {
+  // Bypass normal grounding controls friction matrix briefly during lock frames
+  if (dashLockTimer <= 0) {
+    if (isLeft) {
+      dude.body.velocity.x = -speed;
+      dude.animations.play("left");
+      bg.tilePosition.x += 2;
+      lastFacingDirection = "left";
+    } else if (isRight) {
+      dude.body.velocity.x = speed;
+      dude.animations.play("right");
+      bg.tilePosition.x -= 2;
+      lastFacingDirection = "right";
+    } else {
       dude.body.velocity.x = 0;
+      dude.animations.stop();
+      dude.frame = 4;
     }
-    dude.animations.stop();
-    dude.frame = 4;
-  }
 
-  if (isJump && dude.body.touching.down) {
-    dude.body.velocity.y = -700;
+    if (isJump && dude.body.touching.down) {
+      dude.body.velocity.y = -700;
+    }
+  } else {
+    // Keep tile sprite background moving smoothly during active blast frames
+    if (dude.body.velocity.x > 0) bg.tilePosition.x -= 4;
+    if (dude.body.velocity.x < 0) bg.tilePosition.x += 4;
   }
 }
 
@@ -656,7 +670,6 @@ function collectCoin(player, coin) {
   score++;
 }
 
-// Added touch dashboard hooks for mobile mapping triggers if applicable
 function setupMobileButtons() {
   const createBtn = function(x, y, w, h, type) {
     let g = game.add.graphics(0, 0);
