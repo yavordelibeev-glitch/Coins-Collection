@@ -28,7 +28,7 @@ let fullScreenButton;
 let alertText;
 let cooldownText;
 
-// UI & Menu Groups
+// UI Components
 let gameTimerText;
 let startTime = 0;
 let elapsedTime = 0;
@@ -122,8 +122,12 @@ function create() {
   platforma();
   moneta();
 
-  backgroundMusic = game.add.audio("backgroundSound");
-  backgroundMusic.loop = true;
+  try {
+    backgroundMusic = game.add.audio("backgroundSound");
+    backgroundMusic.loop = true;
+  } catch(e) {
+    console.log("Audio load skipped contextually to prevent thread crashes");
+  }
 
   // Global Core User Interfaces
   alertText = game.add.text(900, 400, "", { font: "bold 80px Arial", fill: "#f39c12" });
@@ -182,7 +186,7 @@ function create() {
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
   
-  // Mobile Dashboard Setup
+  // Create early groups to avoid runtime reference injection gaps
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
   mobileControlsGroup.visible = false;
@@ -293,7 +297,7 @@ function startGame() {
   
   startTime = game.time.time;
   
-  if (musicOn) backgroundMusic.play();
+  if (musicOn && backgroundMusic) backgroundMusic.play();
   
   game.camera.follow(dude);
   
@@ -305,7 +309,7 @@ function startGame() {
 function toggleMusic() {
   musicOn = !musicOn;
   musicToggle.text = musicOn ? "MUSIC: ON (M)" : "MUSIC: OFF (M)";
-  if (isStarted && !isPaused) {
+  if (isStarted && !isPaused && backgroundMusic) {
     if (musicOn) backgroundMusic.play();
     else backgroundMusic.stop();
   }
@@ -313,7 +317,7 @@ function toggleMusic() {
 
 function createPauseMenuUI() {
   let pauseBg = game.add.graphics(0, 0);
-  pauseBg.beginFill(0x000000, 0.8);
+  pauseBg.beginFill(0x000000, 0.85);
   pauseBg.drawRect(0, 0, 1800, 800);
   pauseBg.endFill();
   pauseMenuGroup.add(pauseBg);
@@ -346,12 +350,12 @@ function togglePauseMenu() {
     pauseMenuGroup.visible = true;
     game.world.bringToTop(pauseMenuGroup); 
     dude.body.enable = false; 
-    if (musicOn) backgroundMusic.pause();
+    if (musicOn && backgroundMusic) backgroundMusic.pause();
     pausedTimeBuffer = game.time.time;
   } else {
     pauseMenuGroup.visible = false;
     dude.body.enable = true;
-    if (musicOn) backgroundMusic.resume();
+    if (musicOn && backgroundMusic) backgroundMusic.resume();
     startTime += (game.time.time - pausedTimeBuffer);
   }
 }
@@ -404,7 +408,7 @@ function updateMovingPlatforms() {
 function showGameOver() {
   isGameOver = true;
   dude.kill();
-  backgroundMusic.stop();
+  if (backgroundMusic) backgroundMusic.stop();
   mobileControlsGroup.visible = false;
   
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
@@ -646,8 +650,7 @@ function handleLevels() {
       addNew7 = false;
     }
     if (score == 66 && addNew8) {
-      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70);
-      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70);
+      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70));
       addNew8 = false;
     }
     if (score == 68 && addNew9) {
@@ -696,7 +699,7 @@ function handleLevels() {
     applyScreenEffects();
     showAlert("WELCOME TO LEVEL " + currentLevel);
   } else if (currentLevel === 3 && score >= 75 && addNew13) {
-    backgroundMusic.stop();
+    if (backgroundMusic) backgroundMusic.stop();
     game.canvas.style.transform = "none";
     mobileControlsGroup.visible = false;
     
@@ -724,7 +727,7 @@ function collectCoin(player, coin) {
 
 function setupMobileButtons() {
   const createBtn = function(x, y, w, h, type, symbol, fontSize) {
-    // We generate a transparent 1x1 placeholder structure texture to ensure input events register safely without box borders
+    // Generate an entirely transparent bounding graphic to prevent square block backgrounds
     let g = game.add.graphics(0, 0);
     g.beginFill(0xffffff, 0.01);
     g.drawRect(0, 0, w, h);
@@ -733,7 +736,7 @@ function setupMobileButtons() {
     let btn = game.add.sprite(x, y, g.generateTexture());
     btn.inputEnabled = true;
     
-    // Transparent icon rendering overlayed on top of interaction bounds
+    // Add raw text labels directly on top of transparent sprite hitboxes
     let label = game.add.text(w / 2, h / 2, symbol, { 
       font: "bold " + fontSize + "px Arial", 
       fill: "#ffffff" 
@@ -754,14 +757,14 @@ function setupMobileButtons() {
     g.destroy();
   };
 
-  // Upscaled D-Pad Inputs Layout with Zero Bounding Box Frame
-  createBtn(50, 520, 180, 180, "left", "◀", 64);
-  createBtn(270, 520, 180, 180, "right", "▶", 64);
+  // Upscaled D-Pad Layout Controls (Invisible boxes, clean floating symbols)
+  createBtn(50, 500, 200, 200, "left", "◀", 72);
+  createBtn(280, 500, 200, 200, "right", "▶", 72);
   
-  // Custom High-Velocity Arrow Glyphs Layout Mappings
-  createBtn(1320, 500, 200, 200, "dash", "▶▶", 60);
-  createBtn(1560, 500, 200, 200, "jump", "▲▲", 60);
+  // Custom Requested Icons (Larger target boundaries)
+  createBtn(1280, 480, 220, 220, "dash", "▶▶", 75);
+  createBtn(1540, 480, 220, 220, "jump", "▲▲", 75);
 
-  // Relocated Pause Button strictly isolated away from movement inputs (Top Right Frame Edge)
-  createBtn(1720, 120, 60, 60, "pause", "||", 48);
+  // Totally Isolated Pause Hook (Pushed far up into top right corner frame edge context)
+  createBtn(1700, 40, 80, 80, "pause", "||", 54);
 }
