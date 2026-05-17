@@ -27,6 +27,7 @@ let musicToggle;
 let fullScreenButton;
 let alertText;
 let cooldownText;
+let tpCooldownText; // New UI element to track right hand blink cooldown
 
 let gameTimerText;
 let startTime = 0;
@@ -38,11 +39,18 @@ let mobileControlsGroup;
 let currentLevel = 1;
 let lastFacingDirection = "right";
 
+// Left Hand Propulsion Blast Variables
 let canDash = true;
 let dashCooldownTimer = 0;
 let dashLockTimer = 0; 
 const DASH_COOLDOWN_TIME = 10; 
 const DASH_SPEED = 1300; 
+
+// Right Hand Phase Shift Teleport Variables
+let canTP = true;
+let tpCooldownTimer = 0;
+const TP_COOLDOWN_TIME = 15; // Strict 15-second tracking window
+const PHASE_SHIFT_DISTANCE = 250; 
 
 let addNew = true;
 let addNew1 = true; let addNew2 = true; let addNew3 = true; let addNew4 = true;
@@ -125,7 +133,12 @@ function create() {
   cooldownText.fixedToCamera = true;
   cooldownText.visible = false;
 
-  gameTimerText = game.add.text(50, 95, "TIME: 0.00s", { font: "bold 24px Arial", fill: "#ffffff" });
+  // New visual overlay tracker for your Right Hand Arrow Teleport mechanic
+  tpCooldownText = game.add.text(50, 90, "RIGHT TELEPORT: READY [ARROWS]", { font: "bold 24px Arial", fill: "#00ffff" });
+  tpCooldownText.fixedToCamera = true;
+  tpCooldownText.visible = false;
+
+  gameTimerText = game.add.text(50, 135, "TIME: 0.00s", { font: "bold 24px Arial", fill: "#ffffff" });
   gameTimerText.fixedToCamera = true;
   gameTimerText.visible = false;
 
@@ -166,9 +179,17 @@ function create() {
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
   spaceBar.onDown.add(startGame);
+  
+  // Keep the left shift propulsion mechanic right where it was
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
   
+  // Right Hand Execution Hooks - Maps Phase Teleporting explicitly to Arrow Inputs
+  cursors.left.onDown.add(function() { executeArrowTP("left"); });
+  cursors.right.onDown.add(function() { executeArrowTP("right"); });
+  cursors.up.onDown.add(function() { executeArrowTP("up"); });
+  cursors.down.onDown.add(function() { executeArrowTP("down"); });
+
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
   mobileControlsGroup.visible = false;
@@ -190,6 +211,7 @@ function showAlert(message) {
 }
 
 function updateCooldown() {
+  // 1. Maintain Left Hand Propulsion Gun Timers
   if (!canDash) {
     dashCooldownTimer -= game.time.physicsElapsed;
     if (dashCooldownTimer <= 0) {
@@ -204,15 +226,59 @@ function updateCooldown() {
   if (dashLockTimer > 0) {
     dashLockTimer -= game.time.physicsElapsed;
   }
+
+  // 2. Track Right Hand Arrow Key Blink Teleport Cooldown
+  if (!canTP) {
+    tpCooldownTimer -= game.time.physicsElapsed;
+    if (tpCooldownTimer <= 0) {
+      canTP = true;
+      tpCooldownText.text = "RIGHT TELEPORT: READY [ARROWS]";
+      tpCooldownText.fill = "#00ffff";
+    } else {
+      tpCooldownText.text = "RIGHT TELEPORT: COOLDOWN (" + Math.ceil(tpCooldownTimer) + "s)";
+      tpCooldownText.fill = "#ff33ff";
+    }
+  }
+}
+
+// Right hand explicit positional manipulation teleport engine
+function executeArrowTP(direction) {
+  if (!isStarted || isGameOver || isPaused || !canTP) return;
+
+  let activeDirection = direction;
+
+  // Invert directional coordinates safely if affected by Level 1 curse mechanics
+  if (currentLevel === 1 && score >= 23 && score < 25) {
+    if (activeDirection === "left") activeDirection = "right";
+    else if (activeDirection === "right") activeDirection = "left";
+  }
+
+  // Instant vector displacement mechanics
+  if (activeDirection === "left") {
+    dude.x = Math.max(0, dude.x - PHASE_SHIFT_DISTANCE);
+  } else if (activeDirection === "right") {
+    dude.x = Math.min(game.world.width - dude.width, dude.x + PHASE_SHIFT_DISTANCE);
+  } else if (activeDirection === "up") {
+    dude.y = Math.max(0, dude.y - PHASE_SHIFT_DISTANCE);
+  } else if (activeDirection === "down") {
+    dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
+  }
+
+  // Clear vertical drop tracking vectors to facilitate a safe flash recover drop
+  dude.body.velocity.y = 0;
+
+  canTP = false;
+  tpCooldownTimer = TP_COOLDOWN_TIME;
+  showAlert("PHASE SHIFT BLINK!");
 }
 
 function firePropulsionGun() {
   if (!isStarted || isGameOver || isPaused || !canDash) return;
 
-  let inputLeft = a.isDown || cursors.left.isDown || buttonStates.left;
-  let inputRight = d.isDown || cursors.right.isDown || buttonStates.right;
-  let inputUp = w.isDown || cursors.up.isDown || buttonStates.jump;
-  let inputDown = s.isDown || cursors.down.isDown;
+  let inputLeft = a.isDown || buttonStates.left;
+  let inputRight = d.isDown || buttonStates.right;
+  let inputUp = w.isDown || buttonStates.jump;
+  let inputDown = s.isDown;
 
   if (currentLevel === 1 && score >= 23 && score < 25) {
     let temp = inputLeft; inputLeft = inputRight; inputRight = temp;
@@ -253,6 +319,7 @@ function startGame() {
   startButton.visible = false;
   fullScreenButton.visible = false;
   cooldownText.visible = true; 
+  tpCooldownText.visible = true;
   gameTimerText.visible = true;
   mobileControlsGroup.visible = true; 
   startTime = game.time.time;
@@ -260,6 +327,7 @@ function startGame() {
   game.camera.follow(dude);
   game.world.bringToTop(mobileControlsGroup);
   game.world.bringToTop(cooldownText);
+  game.world.bringToTop(tpCooldownText);
   game.world.bringToTop(gameTimerText);
 }
 
@@ -356,9 +424,10 @@ function showGameOver() {
 }
 
 function handleMovement() {
-  let isLeft = a.isDown || cursors.left.isDown || buttonStates.left;
-  let isRight = d.isDown || cursors.right.isDown || buttonStates.right;
-  let isJump = w.isDown || cursors.up.isDown || buttonStates.jump;
+  // Restored original left-hand steering setup cleanly
+  let isLeft = a.isDown || buttonStates.left;
+  let isRight = d.isDown || buttonStates.right;
+  let isJump = w.isDown || buttonStates.jump;
 
   if (score === 0) showAlert("SPEED UP!");
   if (score === 10) showAlert("LOW GRAVITY!");
@@ -470,7 +539,7 @@ function handleLevels() {
     if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
     if (score == 70 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
     if (score == 72 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
-    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
+    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, finalPlatformIndex.y - 110); c.scale.setTo(0.5); addNew12 = false; }
   }
 
   if (((currentLevel === 1 && score >= 25) || (currentLevel === 2 && score >= 50)) && addNew13) {
@@ -505,8 +574,6 @@ function setupMobileButtons() {
     });
     label.anchor.setTo(0.5);
     label.inputEnabled = true;
-
-    // Apply dark text drop-shadow styling to elevate button readability over game sprites
     label.setShadow(3, 3, "rgba(0, 0, 0, 0.6)", 2);
 
     if (type === "dash") {
@@ -521,13 +588,12 @@ function setupMobileButtons() {
     mobileControlsGroup.add(label);
   };
 
-  // Mobile Core Action Controls 
   createBtn(50, 520, 180, 180, "left", "◀", 80);
   createBtn(270, 520, 180, 180, "right", "▶", 80);
   
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
 
-  // Totally Isolated Game Pause Button: Pushed to the top-left margin space to look authentic
-  createBtn(1720, 25, 60, 60, "pause", "❚❚", 50, "Impact");
+  // Authentically-placed Top Left Pause Button
+  createBtn(25, 25, 60, 60, "pause", "❚❚", 50, "Impact");
 }
