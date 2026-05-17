@@ -28,7 +28,6 @@ let fullScreenButton;
 let alertText;
 let cooldownText;
 
-// UI Components
 let gameTimerText;
 let startTime = 0;
 let elapsedTime = 0;
@@ -39,7 +38,6 @@ let mobileControlsGroup;
 let currentLevel = 1;
 let lastFacingDirection = "right";
 
-// Propulsion Gun System
 let canDash = true;
 let dashCooldownTimer = 0;
 let dashLockTimer = 0; 
@@ -47,18 +45,9 @@ const DASH_COOLDOWN_TIME = 10;
 const DASH_SPEED = 1300; 
 
 let addNew = true;
-let addNew1 = true;
-let addNew2 = true;
-let addNew3 = true;
-let addNew4 = true;
-let addNew6 = true;
-let addNew7 = true;
-let addNew8 = true;
-let addNew9 = true;
-let addNew10 = true;
-let addNew11 = true;
-let addNew12 = true;
-let addNew13 = true;
+let addNew1 = true; let addNew2 = true; let addNew3 = true; let addNew4 = true;
+let addNew6 = true; let addNew7 = true; let addNew8 = true; let addNew9 = true;
+let addNew10 = true; let addNew11 = true; let addNew12 = true; let addNew13 = true;
 
 const levelConfigs = {
   1: {
@@ -125,11 +114,8 @@ function create() {
   try {
     backgroundMusic = game.add.audio("backgroundSound");
     backgroundMusic.loop = true;
-  } catch(e) {
-    console.log("Audio load skipped contextually to prevent thread crashes");
-  }
+  } catch(e) {}
 
-  // Global Core User Interfaces
   alertText = game.add.text(900, 400, "", { font: "bold 80px Arial", fill: "#f39c12" });
   alertText.anchor.setTo(0.5);
   alertText.fixedToCamera = true;
@@ -143,7 +129,6 @@ function create() {
   gameTimerText.fixedToCamera = true;
   gameTimerText.visible = false;
 
-  // Title Layout
   titleText = game.add.text(900, 250, "DESERT CLIMBER", { font: "bold 100px Arial", fill: "#ffffff" });
   titleText.anchor.setTo(0.5);
   titleText.fixedToCamera = true;
@@ -166,7 +151,6 @@ function create() {
   musicToggle.fixedToCamera = true;
   musicToggle.events.onInputDown.add(toggleMusic);
 
-  // Key Mappings Configuration Block
   w = game.input.keyboard.addKey(Phaser.Keyboard.W);
   a = game.input.keyboard.addKey(Phaser.Keyboard.A);
   s = game.input.keyboard.addKey(Phaser.Keyboard.S);
@@ -182,11 +166,9 @@ function create() {
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
   spaceBar.onDown.add(startGame);
-  
   shiftKey.onDown.add(firePropulsionGun);
   escKey.onDown.add(togglePauseMenu);
   
-  // Create early groups to avoid runtime reference injection gaps
   mobileControlsGroup = game.add.group();
   mobileControlsGroup.fixedToCamera = true;
   mobileControlsGroup.visible = false;
@@ -233,37 +215,22 @@ function firePropulsionGun() {
   let inputDown = s.isDown || cursors.down.isDown;
 
   if (currentLevel === 1 && score >= 23 && score < 25) {
-    let temp = inputLeft;
-    inputLeft = inputRight;
-    inputRight = temp;
+    let temp = inputLeft; inputLeft = inputRight; inputRight = temp;
   }
 
   let fired = false;
   dude.body.velocity.x = 0;
   dude.body.velocity.y = 0;
 
-  if (inputLeft) {
-    dude.body.velocity.x = -DASH_SPEED;
-    fired = true;
-  } else if (inputRight) {
-    dude.body.velocity.x = DASH_SPEED;
-    fired = true;
-  }
+  if (inputLeft) { dude.body.velocity.x = -DASH_SPEED; fired = true; }
+  else if (inputRight) { dude.body.velocity.x = DASH_SPEED; fired = true; }
 
-  if (inputUp) {
-    dude.body.velocity.y = -DASH_SPEED;
-    fired = true;
-  } else if (inputDown) {
-    dude.body.velocity.y = DASH_SPEED;
-    fired = true;
-  }
+  if (inputUp) { dude.body.velocity.y = -DASH_SPEED; fired = true; }
+  else if (inputDown) { dude.body.velocity.y = DASH_SPEED; fired = true; }
 
   if (!fired) {
-    if (lastFacingDirection === "left") {
-      dude.body.velocity.x = -DASH_SPEED;
-    } else {
-      dude.body.velocity.x = DASH_SPEED;
-    }
+    if (lastFacingDirection === "left") { dude.body.velocity.x = -DASH_SPEED; }
+    else { dude.body.velocity.x = DASH_SPEED; }
   }
 
   canDash = false;
@@ -273,34 +240,24 @@ function firePropulsionGun() {
 }
 
 function goFull() {
-  if (game.scale.isFullScreen) {
-    game.scale.stopFullScreen();
-  } else {
-    game.scale.startFullScreen(false);
-  }
+  if (game.scale.isFullScreen) { game.scale.stopFullScreen(); }
+  else { game.scale.startFullScreen(false); }
 }
 
 function startGame() {
   if (isStarted) return;
-
   isStarted = true;
   dude.visible = true;
   dude.body.gravity.y = 1000;
-  
   titleText.visible = false;
   startButton.visible = false;
   fullScreenButton.visible = false;
-  
   cooldownText.visible = true; 
   gameTimerText.visible = true;
   mobileControlsGroup.visible = true; 
-  
   startTime = game.time.time;
-  
   if (musicOn && backgroundMusic) backgroundMusic.play();
-  
   game.camera.follow(dude);
-  
   game.world.bringToTop(mobileControlsGroup);
   game.world.bringToTop(cooldownText);
   game.world.bringToTop(gameTimerText);
@@ -310,8 +267,7 @@ function toggleMusic() {
   musicOn = !musicOn;
   musicToggle.text = musicOn ? "MUSIC: ON (M)" : "MUSIC: OFF (M)";
   if (isStarted && !isPaused && backgroundMusic) {
-    if (musicOn) backgroundMusic.play();
-    else backgroundMusic.stop();
+    if (musicOn) backgroundMusic.play(); else backgroundMusic.stop();
   }
 }
 
@@ -335,17 +291,13 @@ function createPauseMenuUI() {
   let restartBtn = game.add.text(900, 550, "RESTART MAP", { font: "50px Arial", fill: "#ff3333", backgroundColor: "rgba(255,255,255,0.1)" });
   restartBtn.anchor.setTo(0.5);
   restartBtn.inputEnabled = true;
-  restartBtn.events.onInputDown.add(function() {
-    location.reload();
-  });
+  restartBtn.events.onInputDown.add(function() { location.reload(); });
   pauseMenuGroup.add(restartBtn);
 }
 
 function togglePauseMenu() {
   if (!isStarted || isGameOver) return;
-
   isPaused = !isPaused;
-
   if (isPaused) {
     pauseMenuGroup.visible = true;
     game.world.bringToTop(pauseMenuGroup); 
@@ -363,20 +315,13 @@ function togglePauseMenu() {
 function update() {
   if (!isStarted || isGameOver) return;
   if (isPaused) return;
-
   elapsedTime = (game.time.time - startTime) / 1000;
   gameTimerText.text = "TIME: " + elapsedTime.toFixed(2) + "s";
-
   updateMovingPlatforms();
   updateCooldown(); 
-
   game.physics.arcade.collide(dude, plat);
   game.physics.arcade.overlap(dude, coins, collectCoin, null, this);
-  
-  if (dude.y > 800) {
-    game.canvas.style.transform = "none";
-    showGameOver();
-  }
+  if (dude.y > 800) { game.canvas.style.transform = "none"; showGameOver(); }
   handleLevels();
   handleMovement();
 }
@@ -386,17 +331,9 @@ function updateMovingPlatforms() {
     if (p.isMovingObj) {
       let oldX = p.x;
       p.x += p.moveSpeed;
-
-      if (p.x >= p.maxX) {
-        p.x = p.maxX;
-        p.moveSpeed = -Math.abs(p.moveSpeed);
-      } else if (p.x <= p.minX) {
-        p.x = p.minX;
-        p.moveSpeed = Math.abs(p.moveSpeed);
-      }
-
+      if (p.x >= p.maxX) { p.x = p.maxX; p.moveSpeed = -Math.abs(p.moveSpeed); }
+      else if (p.x <= p.minX) { p.x = p.minX; p.moveSpeed = Math.abs(p.moveSpeed); }
       let deltaX = p.x - oldX;
-
       if (dude.body.touching.down && (game.physics.arcade.intersects(dude, p) || (dude.x + dude.width >= p.x && dude.x <= p.x + p.width && Math.abs((dude.y + dude.height) - p.y) < 6))) {
         dude.x += deltaX;
         dude.y = p.y - dude.height;
@@ -410,16 +347,12 @@ function showGameOver() {
   dude.kill();
   if (backgroundMusic) backgroundMusic.stop();
   mobileControlsGroup.visible = false;
-  
   let goText = game.add.text(game.camera.x + 900, 300, "GAME OVER", { font: "80px Arial", fill: "#ff0000" });
   goText.anchor.setTo(0.5);
-  
   let restText = game.add.text(game.camera.x + 900, 450, "CLICK TO RESTART", { font: "50px Arial", fill: "#ffffff" });
   restText.anchor.setTo(0.5);
   restText.inputEnabled = true;
-  restText.events.onInputDown.add(function() {
-    location.reload();
-  });
+  restText.events.onInputDown.add(function() { location.reload(); });
 }
 
 function handleMovement() {
@@ -433,45 +366,25 @@ function handleMovement() {
   if (score === 23) showAlert("CONTROLS SWITCHED!");
 
   if (currentLevel === 1 && score >= 23 && score < 25) {
-    let temp = isLeft;
-    isLeft = isRight;
-    isRight = temp;
+    let temp = isLeft; isLeft = isRight; isRight = temp;
   }
 
   let speed = score < 4 ? 500 : 250;
+  if (dashLockTimer <= 0) { dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000; }
+  else { dude.body.gravity.y = 0; }
 
-  if (dashLockTimer <= 0) {
-    dude.body.gravity.y = (score >= 10 && score < 14) ? 200 : 1000;
-  } else {
-    dude.body.gravity.y = 0; 
-  }
-
-  if (score >= 16 && score < 20) {
-    dude.scale.setTo(0.5, 0.5);
-  } else {
-    dude.scale.setTo(1, 1);
-  }
+  if (score >= 16 && score < 20) { dude.scale.setTo(0.5, 0.5); }
+  else { dude.scale.setTo(1, 1); }
 
   if (dashLockTimer <= 0) {
     if (isLeft) {
-      dude.body.velocity.x = -speed;
-      dude.animations.play("left");
-      bg.tilePosition.x += 2;
-      lastFacingDirection = "left";
+      dude.body.velocity.x = -speed; dude.animations.play("left"); bg.tilePosition.x += 2; lastFacingDirection = "left";
     } else if (isRight) {
-      dude.body.velocity.x = speed;
-      dude.animations.play("right");
-      bg.tilePosition.x -= 2;
-      lastFacingDirection = "right";
+      dude.body.velocity.x = speed; dude.animations.play("right"); bg.tilePosition.x -= 2; lastFacingDirection = "right";
     } else {
-      dude.body.velocity.x = 0;
-      dude.animations.stop();
-      dude.frame = 4;
+      dude.body.velocity.x = 0; dude.animations.stop(); dude.frame = 4;
     }
-
-    if (isJump && dude.body.touching.down) {
-      dude.body.velocity.y = -700;
-    }
+    if (isJump && dude.body.touching.down) { dude.body.velocity.y = -700; }
   } else {
     if (dude.body.velocity.x > 0) bg.tilePosition.x -= 4;
     if (dude.body.velocity.x < 0) bg.tilePosition.x += 4;
@@ -480,23 +393,15 @@ function handleMovement() {
 
 function platforma() {
   if (plat) plat.destroy();
-  
   plat = game.add.group();
   plat.enableBody = true;
-  
   const points = levelConfigs[currentLevel].platforms;
   points.forEach(function(p) {
     let obj = plat.create(p.x, p.y, "plat");
     obj.scale.setTo(0.5);
     obj.body.immovable = true;
-    
     if (p.isMoving) {
-      obj.isMovingObj = true;
-      obj.minX = p.minX;
-      obj.maxX = p.maxX;
-      obj.moveSpeed = p.speed;
-      obj.body.friction.x = 1; 
-      obj.body.bounce.set(0);
+      obj.isMovingObj = true; obj.minX = p.minX; obj.maxX = p.maxX; obj.moveSpeed = p.speed; obj.body.friction.x = 1; obj.body.bounce.set(0);
     }
   });
 }
@@ -505,11 +410,8 @@ function moneta() {
   if (coins) coins.destroy();
   coins = game.add.group();
   coins.enableBody = true;
-
-  if (currentLevel === 1) {
-    createCoin(200, 180);
-    createCoin(400, 180);
-  } else {
+  if (currentLevel === 1) { createCoin(200, 180); createCoin(400, 180); }
+  else {
     const currentPlatforms = levelConfigs[currentLevel].platforms;
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 50, currentPlatforms[0].y - 70);
     if (currentPlatforms[0]) createCoin(currentPlatforms[0].x + 350, currentPlatforms[0].y - 70);
@@ -524,13 +426,10 @@ function createCoin(x, y) {
   return c;
 }
 
-function applyScreenEffects() {
-  game.canvas.style.transform = "none";
-}
+function applyScreenEffects() { game.canvas.style.transform = "none"; }
 
 function handleLevels() {
   const currentPlatforms = levelConfigs[currentLevel].platforms;
-
   if (currentLevel === 1) {
     if (score == 2 && addNew) { createCoin(550, 400); createCoin(850, 400); addNew = false; }
     if (score == 4 && addNew1) { createCoin(1050, 280); createCoin(1350, 280); addNew1 = false; }
@@ -543,228 +442,91 @@ function handleLevels() {
     if (score == 18 && addNew9) { createCoin(3950, 240); createCoin(4250, 240); addNew9 = false; }
     if (score == 20 && addNew10) { createCoin(4550, 55); createCoin(4850, 55); addNew10 = false; }
     if (score == 22 && addNew11) { createCoin(4750, 300); createCoin(5050, 300); addNew11 = false; }
-    
-    if (score == 24 && addNew12) {
-      let c = createCoin(5550, 290);
-      c.scale.setTo(0.5);
-      addNew12 = false;
-    }
+    if (score == 24 && addNew12) { let c = createCoin(5550, 290); c.scale.setTo(0.5); addNew12 = false; }
   } 
   else if (currentLevel === 2) {
-    if (score == 27 && addNew) {
-      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
-      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
-      addNew = false;
-    }
-    if (score == 29 && addNew1) {
-      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70);
-      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70);
-      addNew1 = false;
-    }
-    if (score == 31 && addNew2) {
-      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70);
-      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70);
-      addNew2 = false;
-    }
-    if (score == 33 && addNew3) {
-      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70);
-      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70);
-      addNew3 = false;
-    }
-    if (score == 35 && addNew4) {
-      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70);
-      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70);
-      addNew4 = false;
-    }
-    if (score == 37 && addNew6) {
-      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70);
-      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70);
-      addNew6 = false;
-    }
-    if (score == 39 && addNew7) {
-      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70);
-      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70);
-      addNew7 = false;
-    }
-    if (score == 41 && addNew8) {
-      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70);
-      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70);
-      addNew8 = false;
-    }
-    if (score == 43 && addNew9) {
-      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70);
-      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70);
-      addNew9 = false;
-    }
-    if (score == 45 && addNew10) {
-      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70);
-      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70);
-      addNew10 = false;
-    }
-    if (score == 47 && addNew11) {
-      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70);
-      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70);
-      addNew11 = false;
-    }
-    if (score == 49 && addNew12) {
-      let finalPlatformIndex = currentPlatforms.length - 1;
-      let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110);
-      c.scale.setTo(0.5);
-      addNew12 = false;
-    }
+    if (score == 27 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
+    if (score == 29 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
+    if (score == 31 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
+    if (score == 33 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
+    if (score == 35 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
+    if (score == 37 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
+    if (score == 39 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
+    if (score == 41 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
+    if (score == 43 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
+    if (score == 45 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
+    if (score == 47 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
+    if (score == 49 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
   } 
   else if (currentLevel === 3) {
-    if (score == 52 && addNew) {
-      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70);
-      if (currentPlatforms[1]) createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70);
-      addNew = false;
-    }
-    if (score == 54 && addNew1) {
-      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70);
-      if (currentPlatforms[2]) createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70);
-      addNew1 = false;
-    }
-    if (score == 56 && addNew2) {
-      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70);
-      if (currentPlatforms[3]) createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70);
-      addNew2 = false;
-    }
-    if (score == 58 && addNew3) {
-      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70);
-      if (currentPlatforms[4]) createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70);
-      addNew3 = false;
-    }
-    if (score == 60 && addNew4) {
-      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70);
-      if (currentPlatforms[5]) createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70);
-      addNew4 = false;
-    }
-    if (score == 62 && addNew6) {
-      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70);
-      if (currentPlatforms[6]) createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70);
-      addNew6 = false;
-    }
-    if (score == 64 && addNew7) {
-      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70);
-      if (currentPlatforms[7]) createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70);
-      addNew7 = false;
-    }
-    if (score == 66 && addNew8) {
-      if (currentPlatforms[8]) createCoin(currentPlatforms[8].x + 50, createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70));
-      addNew8 = false;
-    }
-    if (score == 68 && addNew9) {
-      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70);
-      if (currentPlatforms[9]) createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70);
-      addNew9 = false;
-    }
-    if (score == 70 && addNew10) {
-      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70);
-      if (currentPlatforms[10]) createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70);
-      addNew10 = false;
-    }
-    if (score == 72 && addNew11) {
-      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70);
-      if (currentPlatforms[11]) createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70);
-      addNew11 = false;
-    }
-    if (score == 74 && addNew12) {
-      let finalPlatformIndex = currentPlatforms.length - 1;
-      let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110);
-      c.scale.setTo(0.5);
-      addNew12 = false;
-    }
+    if (score == 52 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
+    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
+    if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
+    if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
+    if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
+    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
+    if (score == 64 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
+    if (score == 66 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
+    if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
+    if (score == 70 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
+    if (score == 72 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
+    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
   }
 
   if (((currentLevel === 1 && score >= 25) || (currentLevel === 2 && score >= 50)) && addNew13) {
     currentLevel++;
-    
-    buttonStates.left = false;
-    buttonStates.right = false;
-    buttonStates.jump = false;
-    
+    buttonStates.left = false; buttonStates.right = false; buttonStates.jump = false;
     addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
     addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
     addNew10 = true; addNew11 = true; addNew12 = true;
-
-    dude.x = 100;
-    dude.y = 50;
-    dude.body.velocity.x = 0;
-    dude.body.velocity.y = 0;
-
+    dude.x = 100; dude.y = 50; dude.body.velocity.x = 0; dude.body.velocity.y = 0;
     game.canvas.style.transform = "none";
-
-    platforma();
-    moneta();
-    applyScreenEffects();
+    platforma(); moneta(); applyScreenEffects();
     showAlert("WELCOME TO LEVEL " + currentLevel);
   } else if (currentLevel === 3 && score >= 75 && addNew13) {
     if (backgroundMusic) backgroundMusic.stop();
-    game.canvas.style.transform = "none";
-    mobileControlsGroup.visible = false;
-    
+    game.canvas.style.transform = "none"; mobileControlsGroup.visible = false;
     let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", { font: "80px Arial", fill: "#ffffff" });
-    win.anchor.setTo(0.5);
-    win.fixedToCamera = true;
-
+    win.anchor.setTo(0.5); win.fixedToCamera = true;
     let restText = game.add.text(game.camera.x + 900, 450, "PLAY AGAIN?", { font: "50px Arial", fill: "#00ff00" });
-    restText.anchor.setTo(0.5);
-    restText.fixedToCamera = true;
-    restText.inputEnabled = true;
-    restText.events.onInputDown.add(function() {
-      location.reload();
-    });
-
-    dude.kill();
-    addNew13 = false;
+    restText.anchor.setTo(0.5); restText.fixedToCamera = true; restText.inputEnabled = true;
+    restText.events.onInputDown.add(function() { location.reload(); });
+    dude.kill(); addNew13 = false;
   }
 }
 
-function collectCoin(player, coin) {
-  coin.kill();
-  score++;
-}
+function collectCoin(player, coin) { coin.kill(); score++; }
 
 function setupMobileButtons() {
   const createBtn = function(x, y, w, h, type, symbol, fontSize) {
-    // Generate an entirely transparent bounding graphic to prevent square block backgrounds
-    let g = game.add.graphics(0, 0);
-    g.beginFill(0xffffff, 0.01);
-    g.drawRect(0, 0, w, h);
-    g.endFill();
-    
-    let btn = game.add.sprite(x, y, g.generateTexture());
-    btn.inputEnabled = true;
-    
-    // Add raw text labels directly on top of transparent sprite hitboxes
-    let label = game.add.text(w / 2, h / 2, symbol, { 
+    // Pure text injection directly mapped to camera spaces to make background boxes impossible.
+    let label = game.add.text(x + w / 2, y + h / 2, symbol, { 
       font: "bold " + fontSize + "px Arial", 
       fill: "#ffffff" 
     });
     label.anchor.setTo(0.5);
-    btn.addChild(label);
+    label.inputEnabled = true;
 
     if (type === "dash") {
-      btn.events.onInputDown.add(firePropulsionGun);
+      label.events.onInputDown.add(firePropulsionGun);
     } else if (type === "pause") {
-      btn.events.onInputDown.add(togglePauseMenu);
+      label.events.onInputDown.add(togglePauseMenu);
     } else {
-      btn.events.onInputDown.add(function() { buttonStates[type] = true; });
-      btn.events.onInputUp.add(function() { buttonStates[type] = false; });
+      label.events.onInputDown.add(function() { buttonStates[type] = true; });
+      label.events.onInputUp.add(function() { buttonStates[type] = false; });
     }
     
-    mobileControlsGroup.add(btn);
-    g.destroy();
+    mobileControlsGroup.add(label);
   };
 
-  // Upscaled D-Pad Layout Controls (Invisible boxes, clean floating symbols)
-  createBtn(50, 500, 200, 200, "left", "◀", 72);
-  createBtn(280, 500, 200, 200, "right", "▶", 72);
+  // Raw D-Pad layout positions
+  createBtn(50, 520, 180, 180, "left", "◀", 80);
+  createBtn(270, 520, 180, 180, "right", "▶", 80);
   
-  // Custom Requested Icons (Larger target boundaries)
-  createBtn(1280, 480, 220, 220, "dash", "▶▶", 75);
-  createBtn(1540, 480, 220, 220, "jump", "▲▲", 75);
+  // Custom glyph updates requested 
+  createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
+  createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
 
-  // Totally Isolated Pause Hook (Pushed far up into top right corner frame edge context)
-  createBtn(1700, 40, 80, 80, "pause", "||", 54);
+  // Moved completely away from other buttons to prevent misclicks (Top right corner)
+  createBtn(1720, 40, 60, 60, "pause", "||", 60);
 }
