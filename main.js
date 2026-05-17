@@ -234,13 +234,11 @@ function updateCooldown() {
   }
 }
 
-// Global Core calculation handler for processing right-hand Phase Shift Blinks
 function triggerTeleportLogic(direction) {
   if (!isStarted || isGameOver || isPaused || !canTP) return;
 
   let finalDirection = direction;
 
-  // Manage Level 1 control inversion trap safely
   if (currentLevel === 1 && score >= 23 && score < 25) {
     if (finalDirection === "left") finalDirection = "right";
     else if (finalDirection === "right") finalDirection = "left";
@@ -256,7 +254,6 @@ function triggerTeleportLogic(direction) {
     dude.y = Math.min(game.world.height - dude.height, dude.y + PHASE_SHIFT_DISTANCE);
   }
 
-  // Reset downward gravity drop frames to assist execution landing states
   dude.body.velocity.y = 0;
 
   canTP = false;
@@ -264,7 +261,6 @@ function triggerTeleportLogic(direction) {
   showAlert("PHASE SHIFT BLINK!");
 }
 
-// Right-hand keyboard arrow key listener logic parsed inside update loop
 function checkArrowTeleport() {
   if (!isStarted || isGameOver || isPaused) return;
 
@@ -510,6 +506,7 @@ function createCoin(x, y) {
   return c;
 }
 
+// Fixed syntax context on line 369 to reference currentPlatforms coordinate scope properly
 function applyScreenEffects() { game.canvas.style.transform = "none"; }
 
 function handleLevels() {
@@ -554,7 +551,7 @@ function handleLevels() {
     if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
     if (score == 70 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
     if (score == 72 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
-    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, finalPlatformIndex.y - 110); c.scale.setTo(0.5); addNew12 = false; }
+    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
   }
 
   if (((currentLevel === 1 && score >= 25) || (currentLevel === 2 && score >= 50)) && addNew13) {
@@ -594,7 +591,6 @@ function setupMobileButtons() {
     if (type === "dash") {
       label.events.onInputDown.add(firePropulsionGun);
     } else if (type === "tp") {
-      // Mobile TP button fires blink based on last tracked facing direction context
       label.events.onInputDown.add(function() { triggerTeleportLogic(lastFacingDirection); });
     } else if (type === "pause") {
       label.events.onInputDown.add(togglePauseMenu);
@@ -614,7 +610,7 @@ function setupMobileButtons() {
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
   
-  // New Mobile "TP" button cleanly mapped straight above the "jump" node
+  // Mobile "TP" button mapped straight above the "jump" node
   createBtn(1540, 260, 200, 200, "tp", "✨", 90);
 
   createBtn(25, 25, 60, 60, "pause", "❚❚", 50, "Impact");
