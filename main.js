@@ -590,7 +590,6 @@ function handleLevels() {
     if (score == 45 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
     if (score == 47 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
     
-    // Spawns exactly ONE giant coin at the end of Level 2
     if (score == 49 && addNew12) { 
       let finalPlatformIndex = currentPlatforms.length - 1; 
       let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); 
