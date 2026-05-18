@@ -52,7 +52,6 @@ let tpCooldownTimer = 0;
 const TP_COOLDOWN_TIME = 15; 
 const PHASE_SHIFT_DISTANCE = 250; 
 
-// Track if an arrow key was already pressed to prevent instant machine-gun teleporting
 let arrowKeysPressed = { up: false, down: false, left: false, right: false };
 
 let addNew = true;
@@ -85,9 +84,19 @@ const levelConfigs = {
   },
   3: {
     platforms: [
-      { x: 100, y: 300 }, { x: 450, y: 200 }, { x: 850, y: 450 }, { x: 1250, y: 250 },
-      { x: 1650, y: 400 }, { x: 2100, y: 150 }, { x: 2500, y: 350 }, { x: 2950, y: 500 },
-      { x: 3400, y: 250 }, { x: 3900, y: 400 }, { x: 4400, y: 150 }, { x: 4900, y: 350 }, { x: 5400, y: 300 }
+      { x: 100, y: 300 }, 
+      { x: 450, y: 400, isVertical: true, minY: 200, maxY: 550, speed: 3 }, 
+      { x: 850, y: 450 }, 
+      { x: 1250, y: 250, isVertical: true, minY: 150, maxY: 450, speed: -3 }, 
+      { x: 1650, y: 400 }, 
+      { x: 2100, y: 350, isVertical: true, minY: 200, maxY: 600, speed: 4 }, 
+      { x: 2500, y: 350 }, 
+      { x: 2950, y: 500 },
+      { x: 3400, y: 300, isVertical: true, minY: 150, maxY: 500, speed: -4 }, 
+      { x: 3900, y: 400 }, 
+      { x: 4400, y: 150 }, 
+      { x: 4900, y: 350 }, 
+      { x: 5400, y: 300 }
     ]
   }
 };
@@ -180,12 +189,9 @@ function create() {
 
   fKey.onDown.add(goFull);
   mKey.onDown.add(toggleMusic);
-  
   shiftKey.onDown.add(firePropulsionGun);
 
-  // ⚡ HARDCORE FIXES: Vanilla JavaScript event listeners to override the browser's default restrictions
   window.addEventListener("keydown", function(event) {
-    // 1. Force Spacebar to trigger actions regardless of browser layout/focus
     if (event.code === "Space" || event.keyCode === 32) {
       if (!isStarted) {
         event.preventDefault();
@@ -195,22 +201,17 @@ function create() {
         location.reload();
       }
     }
-    
-    // 2. Catch the 'Escape' key globally at the window level before fullscreen eats it up
     if (event.code === "Escape" || event.keyCode === 27) {
       if (isStarted && !isGameOver) {
-        // If they are in fullscreen, we pause instantly as it drops out
         if (game.scale.isFullScreen) {
           if (!isPaused) { togglePauseMenu(); }
         } else {
-          // If they aren't in fullscreen, just behave like a regular pause toggle
           togglePauseMenu();
         }
       }
     }
   });
 
-  // Backup listener: If they drop out of fullscreen via ANY method (like browser escape or clicking away), force pause
   game.scale.onFullScreenChange.add(function() {
     if (!game.scale.isFullScreen && isStarted && !isGameOver && !isPaused) {
       togglePauseMenu();
@@ -442,6 +443,7 @@ function update() {
 
 function updateMovingPlatforms() {
   plat.forEach(function(p) {
+    // Horizontal Platforms (Level 2)
     if (p.isMovingObj) {
       let oldX = p.x;
       p.x += p.moveSpeed;
@@ -450,6 +452,19 @@ function updateMovingPlatforms() {
       let deltaX = p.x - oldX;
       if (dude.body.touching.down && (game.physics.arcade.intersects(dude, p) || (dude.x + dude.width >= p.x && dude.x <= p.x + p.width && Math.abs((dude.y + dude.height) - p.y) < 6))) {
         dude.x += deltaX;
+        dude.y = p.y - dude.height;
+      }
+    }
+    
+    // Vertical Elevator Platforms (Level 3)
+    if (p.isVerticalObj) {
+      let oldY = p.y;
+      p.y += p.moveSpeed;
+      if (p.y >= p.maxY) { p.y = p.maxY; p.moveSpeed = -Math.abs(p.moveSpeed); }
+      else if (p.y <= p.minY) { p.y = p.minY; p.moveSpeed = Math.abs(p.moveSpeed); }
+      
+      // Keep player locked to the top of the elevator as it glides up and down
+      if (dude.body.touching.down && (game.physics.arcade.intersects(dude, p) || (dude.x + dude.width >= p.x && dude.x <= p.x + p.width && Math.abs((dude.y + dude.height) - oldY) < 8))) {
         dude.y = p.y - dude.height;
       }
     }
@@ -514,8 +529,12 @@ function platforma() {
     let obj = plat.create(p.x, p.y, "plat");
     obj.scale.setTo(0.5);
     obj.body.immovable = true;
+    
     if (p.isMoving) {
       obj.isMovingObj = true; obj.minX = p.minX; obj.maxX = p.maxX; obj.moveSpeed = p.speed; obj.body.friction.x = 1; obj.body.bounce.set(0);
+    }
+    if (p.isVertical) {
+      obj.isVerticalObj = true; obj.minY = p.minY; obj.maxY = p.maxY; obj.moveSpeed = p.speed; obj.body.friction.y = 1; obj.body.bounce.set(0);
     }
   });
 }
@@ -570,11 +589,18 @@ function handleLevels() {
     if (score == 43 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
     if (score == 45 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
     if (score == 47 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
-    if (score == 49 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
+    
+    // Spawns exactly ONE giant coin at the end of Level 2
+    if (score == 49 && addNew12) { 
+      let finalPlatformIndex = currentPlatforms.length - 1; 
+      let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); 
+      c.scale.setTo(0.5); 
+      addNew12 = false; 
+    }
   } 
   else if (currentLevel === 3) {
     if (score == 52 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
-    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
+    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
     if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
     if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
     if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
@@ -635,16 +661,10 @@ function setupMobileButtons() {
     mobileControlsGroup.add(label);
   };
 
-  // Left hand setup
   createBtn(50, 520, 180, 180, "left", "◀", 80);
   createBtn(270, 520, 180, 180, "right", "▶", 80);
-  
-  // Right hand action deck stack
   createBtn(1280, 500, 200, 200, "dash", "▶▶", 85);
   createBtn(1540, 500, 200, 200, "jump", "▲▲", 85);
-  
-  // Mobile "TP" button mapped straight above the "jump" node
   createBtn(1540, 260, 200, 200, "tp", "✨", 90);
-
   createBtn(25, 25, 60, 60, "pause", "❚❚", 50, "Impact");
 }
