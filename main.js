@@ -442,6 +442,7 @@ function update() {
 }
 
 function updateMovingPlatforms() {
+  if (!plat || !plat.children) return;
   plat.forEach(function(p) {
     // Horizontal Platforms (Level 2)
     if (p.isMovingObj) {
@@ -590,6 +591,7 @@ function handleLevels() {
     if (score == 45 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
     if (score == 47 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
     
+    // Balanced Spawn Math: Triggers perfectly at score 49
     if (score == 49 && addNew12) { 
       let finalPlatformIndex = currentPlatforms.length - 1; 
       let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); 
@@ -598,31 +600,36 @@ function handleLevels() {
     }
   } 
   else if (currentLevel === 3) {
-    if (score == 52 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
-    if (score == 54 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
-    if (score == 56 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
-    if (score == 58 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
-    if (score == 60 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
-    if (score == 62 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
-    if (score == 64 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
-    if (score == 66 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
-    if (score == 68 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
-    if (score == 70 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
-    if (score == 72 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
-    if (score == 74 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
+    if (score == 51 && addNew) { createCoin(currentPlatforms[1].x + 50, currentPlatforms[1].y - 70); createCoin(currentPlatforms[1].x + 350, currentPlatforms[1].y - 70); addNew = false; }
+    if (score == 53 && addNew1) { createCoin(currentPlatforms[2].x + 50, currentPlatforms[2].y - 70); createCoin(currentPlatforms[2].x + 350, currentPlatforms[2].y - 70); addNew1 = false; }
+    if (score == 55 && addNew2) { createCoin(currentPlatforms[3].x + 50, currentPlatforms[3].y - 70); createCoin(currentPlatforms[3].x + 350, currentPlatforms[3].y - 70); addNew2 = false; }
+    if (score == 57 && addNew3) { createCoin(currentPlatforms[4].x + 50, currentPlatforms[4].y - 70); createCoin(currentPlatforms[4].x + 350, currentPlatforms[4].y - 70); addNew3 = false; }
+    if (score == 59 && addNew4) { createCoin(currentPlatforms[5].x + 50, currentPlatforms[5].y - 70); createCoin(currentPlatforms[5].x + 350, currentPlatforms[5].y - 70); addNew4 = false; }
+    if (score == 61 && addNew6) { createCoin(currentPlatforms[6].x + 50, currentPlatforms[6].y - 70); createCoin(currentPlatforms[6].x + 350, currentPlatforms[6].y - 70); addNew6 = false; }
+    if (score == 63 && addNew7) { createCoin(currentPlatforms[7].x + 50, currentPlatforms[7].y - 70); createCoin(currentPlatforms[7].x + 350, currentPlatforms[7].y - 70); addNew7 = false; }
+    if (score == 65 && addNew8) { createCoin(currentPlatforms[8].x + 50, currentPlatforms[8].y - 70); createCoin(currentPlatforms[8].x + 350, currentPlatforms[8].y - 70); addNew8 = false; }
+    if (score == 67 && addNew9) { createCoin(currentPlatforms[9].x + 50, currentPlatforms[9].y - 70); createCoin(currentPlatforms[9].x + 350, currentPlatforms[9].y - 70); addNew9 = false; }
+    if (score == 69 && addNew10) { createCoin(currentPlatforms[10].x + 50, currentPlatforms[10].y - 70); createCoin(currentPlatforms[10].x + 350, currentPlatforms[10].y - 70); addNew10 = false; }
+    if (score == 71 && addNew11) { createCoin(currentPlatforms[11].x + 50, currentPlatforms[11].y - 70); createCoin(currentPlatforms[11].x + 350, currentPlatforms[11].y - 70); addNew11 = false; }
+    if (score == 73 && addNew12) { let finalPlatformIndex = currentPlatforms.length - 1; let c = createCoin(currentPlatforms[finalPlatformIndex].x + 150, currentPlatforms[finalPlatformIndex].y - 110); c.scale.setTo(0.5); addNew12 = false; }
   }
 
+  // Level Progression Transition Boundary Fix
   if (((currentLevel === 1 && score >= 25) || (currentLevel === 2 && score >= 50)) && addNew13) {
-    currentLevel++;
-    buttonStates.left = false; buttonStates.right = false; buttonStates.jump = false;
-    addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
-    addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
-    addNew10 = true; addNew11 = true; addNew12 = true;
-    dude.x = 100; dude.y = 50; dude.body.velocity.x = 0; dude.body.velocity.y = 0;
-    game.canvas.style.transform = "none";
-    platforma(); moneta(); applyScreenEffects();
-    showAlert("WELCOME TO LEVEL " + currentLevel);
-  } else if (currentLevel === 3 && score >= 75 && addNew13) {
+    addNew13 = false; // Instantly lock out to prevent looping crash
+    
+    game.time.events.add(Phaser.Timer.SECOND * 0.1, function() {
+      currentLevel++;
+      buttonStates.left = false; buttonStates.right = false; buttonStates.jump = false;
+      addNew = true; addNew1 = true; addNew2 = true; addNew3 = true; addNew4 = true;
+      addNew6 = true; addNew7 = true; addNew8 = true; addNew9 = true;
+      addNew10 = true; addNew11 = true; addNew12 = true; addNew13 = true;
+      dude.x = 100; dude.y = 50; dude.body.velocity.x = 0; dude.body.velocity.y = 0;
+      game.canvas.style.transform = "none";
+      platforma(); moneta(); applyScreenEffects();
+      showAlert("WELCOME TO LEVEL " + currentLevel);
+    }, this);
+  } else if (currentLevel === 3 && score >= 74 && addNew13) {
     if (backgroundMusic) backgroundMusic.stop();
     game.canvas.style.transform = "none"; mobileControlsGroup.visible = false;
     let win = game.add.text(game.camera.x + 900, 300, "YOU WIN!", { font: "80px Arial", fill: "#ffffff" });
